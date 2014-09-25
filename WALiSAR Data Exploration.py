@@ -3,7 +3,7 @@
 
 # ## Import libs
 
-# In[676]:
+# In[48]:
 
 import os
 import seaborn as sns
@@ -12,22 +12,22 @@ from scipy import stats
 import scipy as sp
 import numpy as np
 import datetime as dt
-import matplotlib.pyplot as plt
 get_ipython().magic('matplotlib inline')
+import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from itertools import groupby
 from operator import itemgetter
 import matplotlib as mpl
 import bootstrap_contrast as bs
 from nptdms import *
-pd.set_option('display.max_colwidth', -1)
-pd.set_option('display.max_rows', 1)
+#pd.set_option('display.max_colwidth', 50)
+#pd.set_option('display.max_rows', 60)
 mpl.rcParams['pdf.fonttype'] = 42
 
 
 # ## Read tdms files
 
-# In[256]:
+# In[ ]:
 
 # TdmsFile > Groups > Channels > Data 
 f = TdmsFile("LOG_2017-04-18_16-22-19.tdms")
@@ -35,21 +35,21 @@ f = TdmsFile("LOG_2017-04-18_16-22-19.tdms")
 
 # ## Inspect the file
 
-# In[257]:
+# In[ ]:
 
 ## Print group names
 groupNames = f.groups()
 print 'Group Names:', groupNames
 
 
-# In[258]:
+# In[ ]:
 
 ## Print channel names of a particular group
 channelNames = f.group_channels('Tracker')
 print 'Trackers channels:', channelNames
 
 
-# In[259]:
+# In[ ]:
 
 for group in groupNames:
     channelNames = f.group_channels(group)
@@ -59,7 +59,7 @@ for group in groupNames:
 
 # ## Access to the data alternative 1
 
-# In[15]:
+# In[ ]:
 
 ## Get the data from a channel
 Genotype = f.channel_data('ExperimentInfo','Genotype')
@@ -72,7 +72,7 @@ print 'Length of the cXmm data:', len(Tracking)
 
 # ## Access to the data alternative 2
 
-# In[260]:
+# In[ ]:
 
 ## Get the data from a channel 2
 channel = f.object('Tracker','Speed_Av_mm_per_sec001')
@@ -80,13 +80,13 @@ data = channel.data
 #time = channel.time_track()
 
 
-# In[264]:
+# In[ ]:
 
 channel1 = f.object('Count','PatternState')
 data1 = channel1.data  
 
 
-# In[276]:
+# In[ ]:
 
 channel1 = f.object('Count','Timestamp')
 data1 = channel1.data 
@@ -94,7 +94,7 @@ data1 = channel1.data
 
 # ## Transfer the data into a Pandas df
 
-# In[403]:
+# In[ ]:
 
 ## Loading data into a Pandas Df
 df = f.as_dataframe()
@@ -104,44 +104,44 @@ df = f.as_dataframe()
 
 # ## Get the light ON/OFF information
 
-# In[577]:
+# In[ ]:
 
 metaData = f.object().properties
 
 
-# In[400]:
+# In[ ]:
 
 data1 = df["/\'Count\'/\'Obj1_cX\'"]
 
 
-# In[384]:
+# In[ ]:
 
 data3 = df["/'Tracker'/'HeadX_pix001'"]
 
 
-# In[401]:
+# In[ ]:
 
 #data1.isnull().sum()
 data1
 
 
-# In[380]:
+# In[ ]:
 
 t = "/'Tracker'/'HeadX_pix001'"
 "/'Tracker'/'HeadX_pix001"
 
 
-# In[381]:
+# In[ ]:
 
 data2 = df[t]
 
 
-# In[360]:
+# In[ ]:
 
 patterns = df["/\'Count\'/\'PatternState'"]
 
 
-# In[371]:
+# In[ ]:
 
 pat01 = patterns[patterns == 'Pattern 01'].index
 pat10 = patterns[patterns == 'Pattern 10'].index
@@ -152,23 +152,23 @@ p10_min = min(pat10)
 p10_max = max(pat10)
 
 
-# In[433]:
+# In[ ]:
 
 p01_min
 
 
-# In[379]:
+# In[ ]:
 
 pat01_first_light_exposure = min(df["/\'Count\'/\'Obj1_InLight'"][p01_min:p01_max][df["/\'Count\'/\'Obj1_InLight'"] == '1'].index) if not df["/\'Count\'/\'Obj1_InLight'"][p01_min:p01_max][df["/\'Count\'/\'Obj1_InLight'"] == '1'].empty else 0
 pat10_first_light_exposure = min(df["/\'Count\'/\'Obj1_InLight'"][p10_min:p10_max][df["/\'Count\'/\'Obj1_InLight'"] == '1'].index) if not df["/\'Count\'/\'Obj1_InLight'"][p10_min:p10_max][df["/\'Count\'/\'Obj1_InLight'"] == '1'].empty else 0
 
 
-# In[598]:
+# In[ ]:
 
 df
 
 
-# In[382]:
+# In[ ]:
 
 fig1 = plt.figure()
 ax1 = plt.subplot(111)
@@ -188,24 +188,23 @@ ax1.axvline(pat10_first_light_exposure,color='black')
 plt.show()
 
 
-# In[392]:
+# In[ ]:
 
 diff = [abs(float(x) - float(y)) for x, y in zip(data1, data3)]
 
 
-# In[599]:
+# In[ ]:
 
 df_pat01 = df[df["/\'Count\'/\'PatternState'"] == 'Pattern 01']    
 df_pat10 = df[df["/\'Count\'/\'PatternState'"] == 'Pattern 10'] 
 
 
-# In[605]:
+# In[ ]:
 
 a = min(df_pat01.index),max(df_pat01.index)
 
 
-# In[515]:
-
+# In[ ]:
 
 ##Get the chunks where the light is ON   
 df_pat01 = df[df["/\'Count\'/\'PatternState'"] == 'Pattern 01']    
@@ -216,156 +215,315 @@ num_of_flies = sum(df.columns.str.contains("/'Tracker'/'HeadX_pix"))
 
 temp = {'FlyID':[],'Pattern 01 First light contact index':[],'Pattern 10 First light contact index':[]}
 for fly in range(1,num_of_flies+1):
-## format the fly index into 3 digits number,i.e '5' >> '005' 
-flyID = format(str(fly).zfill(3))
-
-## generate IDs for the data need to be accessed from the df
-fly_headX_pix_ID = "/'Tracker'/'HeadX_pix" + str(flyID) + "'"
-fly_inLight_ID = "/\'Count\'/\'Obj%s_InLight'" % fly
-
-## find the index where the fly first contacted with light in each pattern
-pat01_first_light_contact = df_pat01.index[df_pat01[fly_inLight_ID] == '1'][0] if not df_pat01.index[df_pat01[fly_inLight_ID] == '1'].empty else None 
-pat10_first_light_contact = df_pat10.index[df_pat10[fly_inLight_ID] == '1'][0] if not df_pat10.index[df_pat10[fly_inLight_ID] == '1'].empty else None 
-
-temp['FlyID'].append(flyID)
-temp['Pattern 01 First light contact index'].append(pat01_first_light_contact)
-temp['Pattern 10 First light contact index'].append(pat10_first_light_contact)
+    ## format the fly index into 3 digits number,i.e '5' >> '005' 
+    flyID = format(str(fly).zfill(3))
+    
+    ## generate IDs for the data need to be accessed from the df
+    fly_headX_pix_ID = "/'Tracker'/'HeadX_pix" + str(flyID) + "'"
+    fly_inLight_ID = "/\'Count\'/\'Obj%s_InLight'" % fly
+    
+    ## find the index where the fly first contacted with light in each pattern
+    pat01_first_light_contact = df_pat01.index[df_pat01[fly_inLight_ID] == '1'][0] if not df_pat01.index[df_pat01[fly_inLight_ID] == '1'].empty else None 
+    pat10_first_light_contact = df_pat10.index[df_pat10[fly_inLight_ID] == '1'][0] if not df_pat10.index[df_pat10[fly_inLight_ID] == '1'].empty else None 
+    
+    temp['FlyID'].append(flyID)
+    temp['Pattern 01 First light contact index'].append(pat01_first_light_contact)
+    temp['Pattern 10 First light contact index'].append(pat10_first_light_contact)
 
 results = pd.DataFrame(temp)
 
 
-# ## Read the tdms and pattern border data into a df
+# ### Read all the tdms and corresponding pattern csv files in a directory into a pandas df
 
-# In[607]:
+# In[336]:
 
-fileName = "LOG_2017-04-18_16-22-19.tdms"
+def ReadExperimentData(directory):
+    ## Generate a single dataframe from the .tdms and pattern files 
+    temp = {'Tdms file name':[],'Date':[],'Time':[],'Light type':[],'Light Intensity(uW/mm2)':[],'Wind status':[],
+            'Satiety':[],'Genotype':[],'Sex':[],'Status':[],'Fly ID':[],'cX(pix)':[],'HeadX(pix)':[],'HeadY(pix)':[],
+            'InLight':[],'First light contact index|P01':[],'First light contact index|P10':[],'LightON index|P01':[],
+            'LightON index|P10':[],'Border|P01':[],'Border|P10':[]}
 
-
-# In[694]:
-
-## Generate a single dataframe from the .tdms and pattern files 
-temp = {'Tdms file name':[],'Date':[],'Time':[],'Light type':[],'Light Intensity(uW/mm2)':[],'Wind status':[],
-        'Satiety':[],'Genotype':[],'Status':[],'Fly ID':[],'cX(pix)':[],'HeadX(pix)':[],'HeadY(pix)':[],
-        'InLight':[],'First light contact index|P01':[],'First light contact index|P10':[],'LightON index|P01':[],
-        'LightON index|P10':[],'Border|P01':[],'Border|P10':[]}
-
-## Open the tdms file
-f = TdmsFile(fileName) 
-
-## Get exp info from the tdms filename
-fname = fileName.split('_')
-date = fname[1]
-time = fname[2][:-5]
-genotype = 'dummy'
-intensity = 'dummy'
-lightType = 'Constant'
-windState = 'dummy'
-satiety = 'dummy'
-
-## Get status info
-if ('w1118' in genotype) | ('W1118' in genotype):
-    status = 'Parent'
-elif (('Gal4' in genotype) | ('GAL4' in genotype)) & ('UAS' in genotype):
-    status = 'Offspring'
-else:
-    status = 'Unknown: check your genotype names'
-
-## Load the tdms into a pandas df
-TDMSdf = f.as_dataframe()
-
-## Get number of flies in the exp
-num_of_flies = sum(TDMSdf.columns.str.contains("/'Tracker'/'HeadX_pix"))
-
-for fly in range(1,num_of_flies+1):
-    ## format the fly index into 3 digits number,i.e '5' >> '005' 
-    flyID = format(str(fly).zfill(3))
+    ## Change directory and get a list of the files in there 
+    os.chdir(directory)
+    fileList = os.listdir(directory)
     
-    ## generate column names for the data need to be pulled from the df
-    fly_cX_pix_ID = "/\'Count\'/\'Obj%s_cX'" % fly 
-    fly_inLight_ID = "/\'Count\'/\'Obj%s_InLight'" % fly
-    fly_headX_pix_ID = "/'Tracker'/'HeadX_pix" + str(flyID) + "'"
-    fly_headY_pix_ID = "/'Tracker'/'HeadY_pix" + str(flyID) + "'"
-   
-    temp['Fly ID'].append(flyID)
-    temp['cX(pix)'].append(TDMSdf[fly_cX_pix_ID].values.astype(float))
-    temp['InLight'].append(TDMSdf[fly_inLight_ID].values.astype(float))
-    temp['HeadX(pix)'].append(TDMSdf[fly_headX_pix_ID].values.astype(float))
-    temp['HeadY(pix)'].append(TDMSdf[fly_headY_pix_ID].values.astype(float))
-    
-## Get the chunks where the light was ON   
-TDMSdf_pat01 = TDMSdf[TDMSdf["/\'Count\'/\'PatternState'"] == 'Pattern 01']    
-TDMSdf_pat10 = TDMSdf[TDMSdf["/\'Count\'/\'PatternState'"] == 'Pattern 10'] 
+    numOfTdmsFiles = 0
+    ## Loop thru the file list to find tdms files and their related csv pattern files
+    for fname in fileList:
+        if fname[-5:] == '.tdms':
+            numOfTdmsFiles += 1
+            ## Open the tdms file
+            f = TdmsFile(fname) 
 
-LightOnP01 = min(TDMSdf_pat01.index),max(TDMSdf_pat01.index)
-LightOnP10 = min(TDMSdf_pat10.index),max(TDMSdf_pat10.index)
+            ## Load the tdms into a pandas df
+            TDMSdf = f.as_dataframe()
+            
+            try:
+            ## Open the pattern csv files to extract light border info per fly
+                tdmsNameNoExtension = fname[:-5]
+                P01_df = pd.read_csv(tdmsNameNoExtension + '_Pattern01.csv')
+                P10_df = pd.read_csv(tdmsNameNoExtension + '_Pattern10.csv')
+            except:
+                print 'No pattern file(s) for %s' %(tdmsNameNoExtension)
+                P01_df = P01_df
+                P10_df = P10_df
 
-## Open the pattern csv files to extract light border info per fly
-P01_df = pd.read_csv('Pattern 01.csv')
-P10_df = pd.read_csv('Pattern 10.csv')
+            ## Get exp info from the tdms filename
+            tdmsNameNoExtension = tdmsNameNoExtension.split('_')
+            date = tdmsNameNoExtension[1]
+            time = tdmsNameNoExtension[2]
+            genotype = tdmsNameNoExtension[3]
+            sex = tdmsNameNoExtension[4]
+            intensity = tdmsNameNoExtension[5]
+            lightType = tdmsNameNoExtension[6]
+            windState = tdmsNameNoExtension[7]
+            satiety = tdmsNameNoExtension[8]
 
-for fly in range(1,num_of_flies+1):
-    flyID = format(str(fly).zfill(3))
-    
-    ## generate column names for the data need to be pulled from the df
-    fly_inLight_ID = "/\'Count\'/\'Obj%s_InLight'" % fly
-    
-    ## find the index where the fly first contacted with light in each pattern
-    P01_first_light_contact = TDMSdf_pat01.index[TDMSdf_pat01[fly_inLight_ID] == '1'][0] if not TDMSdf_pat01.index[TDMSdf_pat01[fly_inLight_ID] == '1'].empty else None 
-    P10_first_light_contact = TDMSdf_pat10.index[TDMSdf_pat10[fly_inLight_ID] == '1'][0] if not TDMSdf_pat10.index[TDMSdf_pat10[fly_inLight_ID] == '1'].empty else None 
-    
-    temp['First light contact index|P01'].append(P01_first_light_contact)
-    temp['First light contact index|P10'].append(P10_first_light_contact)
+            ## Get status info 
+            if ('w1118' in genotype) | ('W1118' in genotype):
+                status = 'Parent'
+            elif (('Gal4' in genotype) | ('GAL4' in genotype)) & ('UAS' in genotype):
+                status = 'Offspring'
+            else:
+                status = 'Unknown: check your genotype names'
+            
+            ## simple putting fly IDs as numbers does not work due to missing chambers (i.e 3,4,..6,7)
+            ## thus, get a list of column names with fly IDs
+            listOfFlyIDs = TDMSdf.columns[TDMSdf.columns.str.contains("/'Tracker'/'HeadX_pix")]
 
-    ## Append the info to temp dict
-    temp['Tdms file name'].append(fileName)
-    temp['Date'].append(date)
-    temp['Time'].append(time)
-    temp['Light type'].append(lightType)
-    temp['Light Intensity(uW/mm2)'].append(intensity)
-    temp['Wind status'].append(windState)
-    temp['Satiety'].append(satiety)
-    temp['Genotype'].append(genotype)
-    temp['Status'].append(status)
-    temp['LightON index|P01'].append(LightOnP01)
-    temp['LightON index|P10'].append(LightOnP10)
-    temp['Border|P01'].append(P01_df.filter(regex='pix').iloc[1].values[fly-1])
-    temp['Border|P10'].append(P10_df.filter(regex='pix').iloc[1].values[fly-1])
+            for fly in listOfFlyIDs:
+                                
+                ## get the fly ID from the data itself
+                flyIndex = int(fly[-4:-1])
+                
+                ## format the fly index into 3 digits number,i.e '5' >> '005' 
+                flyID = format(str(flyIndex).zfill(3))
+                
+                ## generate column names for the data need to be pulled from the df
+                fly_cX_pix_ID = "/\'Count\'/\'Obj%s_cX'" % flyIndex 
+                fly_inLight_ID = "/\'Count\'/\'Obj%s_InLight'" % flyIndex
+                fly_headX_pix_ID = "/'Tracker'/'HeadX_pix" + str(flyID) + "'"
+                fly_headY_pix_ID = "/'Tracker'/'HeadY_pix" + str(flyID) + "'"
 
-colOrder = ['Tdms file name','Date','Time','Light type','Light Intensity(uW/mm2)','Wind status',
-        'Satiety','Genotype','Status','Fly ID','cX(pix)','HeadX(pix)','HeadY(pix)',
-        'InLight','First light contact index|P01','First light contact index|P10','LightON index|P01',
-        'LightON index|P10','Border|P01','Border|P10']
+                temp['Fly ID'].append(flyID)
+                temp['cX(pix)'].append(TDMSdf[fly_cX_pix_ID].values.astype(float))
+                temp['InLight'].append(TDMSdf[fly_inLight_ID].values.astype(float))
+                temp['HeadX(pix)'].append(TDMSdf[fly_headX_pix_ID].values.astype(float))
+                temp['HeadY(pix)'].append(TDMSdf[fly_headY_pix_ID].values.astype(float))
 
-## Convert temp into a df
-results = pd.DataFrame(temp,columns=colOrder)
-#results.to_csv('TrialDF.csv',index=False)
+            ## Get the chunks where the light was ON   
+            TDMSdf_pat01 = TDMSdf[TDMSdf["/\'Count\'/\'PatternState'"] == 'Pattern 01']    
+            TDMSdf_pat10 = TDMSdf[TDMSdf["/\'Count\'/\'PatternState'"] == 'Pattern 10'] 
+
+            LightOnP01 = min(TDMSdf_pat01.index),max(TDMSdf_pat01.index)
+            LightOnP10 = min(TDMSdf_pat10.index),max(TDMSdf_pat10.index)
+
+            for fly in listOfFlyIDs:
+                ## get the fly ID from the data itself
+                flyIndex = int(fly[-4:-1])
+                
+                ## format the fly index into 3 digits number,i.e '5' >> '005' 
+                #flyID = format(str(flyIndex).zfill(3))
+                
+                ## generate column names for the data need to be pulled from the df
+                fly_inLight_ID = "/\'Count\'/\'Obj%s_InLight'" % flyIndex
+
+                ## find the index where the fly first contacted with light in each pattern
+                P01_first_light_contact = TDMSdf_pat01.index[TDMSdf_pat01[fly_inLight_ID] == '1'][0] if not TDMSdf_pat01.index[TDMSdf_pat01[fly_inLight_ID] == '1'].empty else None 
+                P10_first_light_contact = TDMSdf_pat10.index[TDMSdf_pat10[fly_inLight_ID] == '1'][0] if not TDMSdf_pat10.index[TDMSdf_pat10[fly_inLight_ID] == '1'].empty else None 
+
+                ## append the info to temp dict
+                temp['First light contact index|P01'].append(P01_first_light_contact)
+                temp['First light contact index|P10'].append(P10_first_light_contact)  
+                temp['Tdms file name'].append(fname)
+                temp['Date'].append(date)
+                temp['Time'].append(time)
+                temp['Light type'].append(lightType)
+                temp['Light Intensity(uW/mm2)'].append(intensity)
+                temp['Wind status'].append(windState)
+                temp['Satiety'].append(satiety)
+                temp['Genotype'].append(genotype)
+                temp['Sex'].append(sex)
+                temp['Status'].append(status)
+                temp['LightON index|P01'].append(LightOnP01)
+                temp['LightON index|P10'].append(LightOnP10)
+                temp['Border|P01'].append(P01_df.filter(regex='pix').iloc[1].values[flyIndex-1])
+                temp['Border|P10'].append(P10_df.filter(regex='pix').iloc[1].values[flyIndex-1])
+
+    ## Convert temp into a df
+    colOrder = ['Tdms file name','Date','Time','Light type','Light Intensity(uW/mm2)','Wind status',
+                'Satiety','Genotype','Sex','Status','Fly ID','cX(pix)','HeadX(pix)','HeadY(pix)',
+                'InLight','First light contact index|P01','First light contact index|P10','LightON index|P01',
+                'LightON index|P10','Border|P01','Border|P10']
+
+    results = pd.DataFrame(temp,columns=colOrder)
+    return results, numOfTdmsFiles
+
+
+# In[337]:
+
+directory = "C:/Users/tumkayat/Desktop/CodeRep/WALiSAR/BehaviroalDataAnalyses/20170417"
+results, numOfUploadedTdmsFiles = ReadExperimentData(directory)
+numOfUploadedTdmsFiles
+
+
+# In[338]:
+
+results
 
 
 # ## Analyze the df
 
-# ### Percentage time spent after light contact
+# ### Preference index after light contact
 
-# In[696]:
+# In[411]:
 
-def PercentageTimeSpentAfterLightContact(df):
+def PreferenceIndexAfterLightContact(df):
+    numberOfFlies = results.shape[0]
+    PI_afterLightContact_P01 = []
+    PI_afterLightContact_P10 = []
     
+    ## iterate thru the flies to calculate PI scores
+    ## PI scores are calculated seperately for first and second half of the experiment
+    for fly in range(0,numberOfFlies):
+        
+        ## get the first light contact index for the fly
+        firstLightContactIndex_P01 = df['First light contact index|P01'][fly]
+        firstLightContactIndex_P10 = df['First light contact index|P10'][fly]
+        
+        ## if the light contact index is NOT nan, calculate the PI and attach it to the list
+        ## otherwise attach a np.nan value
+        if not np.isnan(firstLightContactIndex_P01):
+            ## get the light OFF index, so that can select InLight data from the first contact until light is OFF
+            lightOFFindex_P01 = df['LightON index|P01'][fly][1]
+            
+            ## select the data after fly was exposed to the light
+            InLightDatainTheRange_P01 = df['InLight'][fly][int(firstLightContactIndex_P01):int(lightOFFindex_P01)]
+            
+            ## calculate PI score
+            numOfDataPoints_P01 = len(InLightDatainTheRange_P01)
+            numOfInLights_P01 = sum(InLightDatainTheRange_P01)
+            numOfInDarks_P01 = numOfDataPoints_P01 - numOfInLights_P01
+           
+            PI_P01 = float(numOfInLights_P01 - numOfInDarks_P01)/float(numOfDataPoints_P01)
+            PI_afterLightContact_P01.append(PI_P01)
+        
+        elif np.isnan(firstLightContactIndex_P01):
+            PI_afterLightContact_P01.append(np.nan)
+        
+        else:
+            None
+        
+        ## same as the first half of the exp: P01
+        if not np.isnan(firstLightContactIndex_P10):
+            lightOFFindex_P10 = df['LightON index|P10'][fly][1]
+            InLightDatainTheRange_P10 = df['InLight'][fly][int(firstLightContactIndex_P10):int(lightOFFindex_P10)]
+            
+            numOfDataPoints_P10 = len(InLightDatainTheRange_P10)
+            numOfInLights_P10 = sum(InLightDatainTheRange_P10)
+            numOfInDarks_P10 = numOfDataPoints_P10 - numOfInLights_P10
+            
+            PI_P10 = float(numOfInLights_P10 - numOfInDarks_P10)/float(numOfDataPoints_P10)
+            PI_afterLightContact_P10.append(PI_P10)
+        
+        elif np.isnan(firstLightContactIndex_P10):
+            PI_afterLightContact_P10.append(np.nan)
+        
+        else:
+            None
+        
+        ## add the Preference Index pattern01 and pattern10 to the df
+    df = df.assign(PreferenceIndex_P01 = pd.Series(PI_afterLightContact_P01, index=df.index),
+                   PreferenceIndex_P10 = pd.Series(PI_afterLightContact_P10, index=df.index))
     
-    return
+    df = df.assign(PreferenceIndex_Mean = pd.Series(df[['PreferenceIndex_P01','PreferenceIndex_P10']].mean(axis=1), index=df.index))
+    
+    droppedNans = MeanPreferenceIndexNoNANs(df)
+    return df, droppedNans
+
+## Nans in the PreferenceIndex_P01 (and P10) columns are treated as not existing in the plotting;
+## therefore, when I am getting the mean of the two columns, I can't treat them as zeroes. 
+## This function, first removes all the rows where either PreferenceIndex_P01 OR PreferenceIndex_P10 is Nan,
+## then calculates a PreferenceIndex_Mean column to the df.
+def MeanPreferenceIndexNoNANs(df):
+    
+    droppedNans = df.dropna(subset = ['PreferenceIndex_P10','PreferenceIndex_P01'])
+    droppedNans = droppedNans.assign(PreferenceIndex_Mean_noNan = pd.Series(droppedNans[['PreferenceIndex_P01','PreferenceIndex_P10']].mean(axis=1), index = droppedNans.index))
+    
+    return droppedNans
+
+
+# In[414]:
+
+## results is the original df that contains all the data, as well as individual preference index and the mean preference index 
+## (In the PreferenceIndex_Mean, Nans are counted as not existing, i.e. P01 = 0.8, P10 = Nan, P_mean = 0.8)
+## meanPreferenceIndexDF_noNan is the df, in which all the Nans in the preference index are dropped and mean preference index
+## is calculated
+results, PreferenceIndexDFDroppedNans = PreferenceIndexAfterLightContact(results)
+
+
+# ### Plotting the results
+
+# In[428]:
+
+## Prepare the dfs for Contrast plotting
+results = results.assign(Genotype_Sex_Satiety_LightType_Intensity_Wind = pd.Series(results['Genotype'] + '_' + results['Sex'] + '_' +
+                        results['Satiety'] + '_' + results['Light type'] + '_' + results['Light Intensity(uW/mm2)'] + '_' +
+                        results['Wind status'], index = results.index))
+
+PreferenceIndexDFDroppedNans = PreferenceIndexDFDroppedNans.assign(Genotype_Sex_Satiety_LightType_Intensity_Wind = pd.Series(PreferenceIndexDFDroppedNans['Genotype'] + 
+                             '_' + PreferenceIndexDFDroppedNans['Sex'] + '_' + PreferenceIndexDFDroppedNans['Satiety'] + '_' + PreferenceIndexDFDroppedNans['Light type'] + 
+                             '_' + PreferenceIndexDFDroppedNans['Light Intensity(uW/mm2)'] + '_' + PreferenceIndexDFDroppedNans['Wind status'], index = PreferenceIndexDFDroppedNans.index))
+
+results = results.assign(Status_Sex_Satiety_LightType_Intensity_Wind = pd.Series(results['Status'] + '_' + results['Sex'] + '_' +
+                        results['Satiety'] + '_' + results['Light type'] + '_' + results['Light Intensity(uW/mm2)'] + '_' +
+                        results['Wind status'], index = results.index))
+
+PreferenceIndexDFDroppedNans = PreferenceIndexDFDroppedNans.assign(Status_Sex_Satiety_LightType_Intensity_Wind = pd.Series(PreferenceIndexDFDroppedNans['Status'] + 
+                             '_' + PreferenceIndexDFDroppedNans['Sex'] + '_' + PreferenceIndexDFDroppedNans['Satiety'] + '_' + PreferenceIndexDFDroppedNans['Light type'] + 
+                             '_' + PreferenceIndexDFDroppedNans['Light Intensity(uW/mm2)'] + '_' + PreferenceIndexDFDroppedNans['Wind status'], index = PreferenceIndexDFDroppedNans.index))
+
+
+# In[439]:
+
+PreferenceIndexDFDroppedNans
+
+
+# In[430]:
+
+results['Status_Sex_Satiety_LightType_Intensity_Wind'].unique()
+
+
+# In[454]:
+
+f,b = bs.contrastplot(PreferenceIndexDFDroppedNans, x = 'Status_Sex_Satiety_LightType_Intensity_Wind', y = 'PreferenceIndex_Mean_noNan', color_col= 'Genotype',                      
+                      idx = (('Parent_Female_Fed_Constant_14uW_Air', 'Offspring_Female_Fed_Constant_14uW_Air'),
+                             ('Parent_Female_Fed_Constant_42uW_Air', 'Offspring_Female_Fed_Constant_42uW_Air'),
+                             ('Parent_Female_Fed_Constant_70uW_Air', 'Offspring_Female_Fed_Constant_70uW_Air')),
+                                        )
+
+plt.savefig('PreferenceIndex_MeanNoNAN_Female_Fed_Constant_Air.pdf',dpi=1000,bbox_inches='tight')
+b
 
 
 # ### Preference index in the choice zone
 
-# In[697]:
+# In[ ]:
 
 def PreferenceIndexinTheChoiceZone(df):
-    
+    ## Pseudo code
+    # Get light border info per fly, generate a choice zone range
+    # Detect all the midpoint crossing of the fly
+    # Get 2-3 sec data around the crossing time point
+    # Plot the trajectories per fly, then for all flies as average
     
     return
 
 
 # ### Fractional time in the odorized zone
 
-# In[698]:
+# In[ ]:
 
 def FractionalTimeinTheOdorizedZone(df):
     
@@ -373,7 +531,7 @@ def FractionalTimeinTheOdorizedZone(df):
     return
 
 
-# In[574]:
+# In[ ]:
 
 ## Plotting first time contacts of the flies in a given experiment
 
@@ -414,14 +572,14 @@ plt.show()
 print 'Never seen the light (Pat01) =',no_contact_w_light_pat01, 'Never seen the light (Pat10) =',no_contact_w_light_pat10 
 
 
-# In[575]:
+# In[ ]:
 
 results
 
 
 # ### Set your data folder 
 
-# In[40]:
+# In[ ]:
 
 folder = "C:/Users/tumkayat/Desktop/ORScreening/OSAR/Orco-ACR1-Male-starved/"
 os.chdir(folder)
@@ -429,7 +587,7 @@ os.chdir(folder)
 
 # ### Can check how many .csv files is located under the folder
 
-# In[41]:
+# In[ ]:
 
 dataFiles = os.listdir(folder)
 len(dataFiles)
@@ -437,14 +595,14 @@ len(dataFiles)
 
 # ### Set how many last seconds you want to use for the analysis
 
-# In[42]:
+# In[ ]:
 
 lastXseconds = 30
 
 
 # ### Run this cell to do the analysis
 
-# In[43]:
+# In[ ]:
 
 def calculatePI(data):
     numofTimePoints = len(data)
@@ -534,14 +692,14 @@ results = pd.DataFrame(temp, columns=['FileName','Pattern', 'FileName_pattern', 
 
 # ### The analysis (Single fly PI etc.) will be saved as a df called "results". You can display it here.
 
-# In[37]:
+# In[ ]:
 
 results
 
 
 # ### To plot the half PIs instead of Single Fly PI, run this cell. Otherwise NOT neccessary.
 
-# In[16]:
+# In[ ]:
 
 halfPI = results.drop_duplicates('FileName_pattern')
 halfPI = halfPI.drop('SingleFlyPI',1)
@@ -549,7 +707,7 @@ halfPI = halfPI.drop('SingleFlyPI',1)
 
 # ### Can see which genotypes there are in the analysis, and assign color to them for the plots
 
-# In[44]:
+# In[ ]:
 
 print results['Genotype'].unique()
 myPal = {#results['Genotype'].unique()[0] : 'cyan',
@@ -559,12 +717,12 @@ myPal = {#results['Genotype'].unique()[0] : 'cyan',
 
 # ### Can check the experimental conditions and use the ones you want to compare as "idx" in the next cells
 
-# In[16]:
+# In[ ]:
 
 results['Status_LightType_Intensity_Wind'].unique()
 
 
-# In[45]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -600,7 +758,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - No Wind - Upwind and Downwind combined - Last 15 sec
 
-# In[10]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -638,7 +796,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - No Wind - UpWind - Last 15 sec
 
-# In[11]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = upWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -678,7 +836,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - No Wind - DownWind - Last 15 sec
 
-# In[12]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = downWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -718,7 +876,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - Wind - Upwind and Downwind combined - Last 15 sec
 
-# In[13]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -754,7 +912,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - Wind - Upwind - Last 15 sec
 
-# In[14]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = upWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -790,7 +948,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - Wind - Downwind - Last 15 sec
 
-# In[15]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = downWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -828,7 +986,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - No Wind (Downwind and Upwind) Last 30 sec
 
-# In[18]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -864,7 +1022,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - No Wind (Downwind half) Last 30 sec
 
-# In[19]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = downWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -900,7 +1058,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - No Wind (Upwind half) Last 30 sec
 
-# In[20]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = upWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -936,7 +1094,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - Wind (Downwind and Upwind) Last 30 sec
 
-# In[21]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -976,7 +1134,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - Wind (Downwind half) Last 30 sec
 
-# In[22]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = downWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -1016,7 +1174,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # ### Constant Light - Wind (Upwind half) Last 30 sec
 
-# In[23]:
+# In[ ]:
 
 fig, contrastHalfPI = bs.contrastplot(data = upWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -1054,7 +1212,7 @@ plt.savefig(str(title) +'.pdf',dpi=1000,bbox_inches='tight')
 contrastHalfPI.to_csv(str(title) +'.csv')
 
 
-# In[39]:
+# In[ ]:
 
 os.close()
 
