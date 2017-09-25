@@ -1,2 +1,2 @@
 # WALiSuite
-Data exploration suite for WALiSAR data
+Data exploration suit for WALiSAR data
