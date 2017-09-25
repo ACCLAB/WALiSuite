@@ -487,6 +487,7 @@ PreferenceIndexDFDroppedNans = PreferenceIndexDFDroppedNans.assign(Status_Sex_Sa
 
 # In[439]:
 
+
 PreferenceIndexDFDroppedNans
 
 
