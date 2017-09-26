@@ -27,15 +27,15 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # ## Read tdms files
 
-# In[ ]:
+# In[487]:
 
 # TdmsFile > Groups > Channels > Data 
-f = TdmsFile("LOG_2017-04-18_16-22-19.tdms")
+f = TdmsFile("LOG_2017-04-17_17-21-29_w1118-UAS-CsChrimson_Male_14uW_Constant_NoAir_Fed.tdms")
 
 
 # ## Inspect the file
 
-# In[ ]:
+# In[489]:
 
 ## Print group names
 groupNames = f.groups()
@@ -49,7 +49,7 @@ channelNames = f.group_channels('Tracker')
 print 'Trackers channels:', channelNames
 
 
-# In[ ]:
+# In[490]:
 
 for group in groupNames:
     channelNames = f.group_channels(group)
@@ -104,9 +104,10 @@ df = f.as_dataframe()
 
 # ## Get the light ON/OFF information
 
-# In[ ]:
+# In[491]:
 
 metaData = f.object().properties
+metaData
 
 
 # In[ ]:
@@ -485,12 +486,6 @@ PreferenceIndexDFDroppedNans = PreferenceIndexDFDroppedNans.assign(Status_Sex_Sa
                              '_' + PreferenceIndexDFDroppedNans['Light Intensity(uW/mm2)'] + '_' + PreferenceIndexDFDroppedNans['Wind status'], index = PreferenceIndexDFDroppedNans.index))
 
 
-# In[439]:
-
-
-PreferenceIndexDFDroppedNans
-
-
 # In[430]:
 
 results['Status_Sex_Satiety_LightType_Intensity_Wind'].unique()
@@ -498,7 +493,7 @@ results['Status_Sex_Satiety_LightType_Intensity_Wind'].unique()
 
 # In[454]:
 
-f,b = bs.contrastplot(PreferenceIndexDFDroppedNans, x = 'Status_Sex_Satiety_LightType_Intensity_Wind', y = 'PreferenceIndex_Mean_noNan', color_col= 'Genotype',                      
+fig,b = bs.contrastplot(PreferenceIndexDFDroppedNans, x = 'Status_Sex_Satiety_LightType_Intensity_Wind', y = 'PreferenceIndex_Mean_noNan', color_col= 'Genotype',                      
                       idx = (('Parent_Female_Fed_Constant_14uW_Air', 'Offspring_Female_Fed_Constant_14uW_Air'),
                              ('Parent_Female_Fed_Constant_42uW_Air', 'Offspring_Female_Fed_Constant_42uW_Air'),
                              ('Parent_Female_Fed_Constant_70uW_Air', 'Offspring_Female_Fed_Constant_70uW_Air')),
@@ -510,16 +505,57 @@ b
 
 # ### Preference index in the choice zone
 
-# In[ ]:
+# In[499]:
 
-def PreferenceIndexinTheChoiceZone(df):
-    ## Pseudo code
-    # Get light border info per fly, generate a choice zone range
-    # Detect all the midpoint crossing of the fly
-    # Get 2-3 sec data around the crossing time point
-    # Plot the trajectories per fly, then for all flies as average
+# def PreferenceIndexinTheChoiceZone(df):
+#     ## Pseudo code
+#     # Get light border info per fly, generate a choice zone range
+#     # Detect all the midpoint crossing of the fly
+#     # Get 2-3 sec data around the crossing time point
+#     # Plot the trajectories per fly, then for all flies as average
+#     return
+
+border_P01 = results.iloc[0]['Border|P01']
+
+# for i in range(len(results.iloc[0]['HeadX(pix)'])-1):
+#     if (results.iloc[0]['HeadX(pix)'][i] >= border_P01) & (results.iloc[0]['HeadX(pix)'][i+1] <= border_P01):
+#         print i
+#     elif (results.iloc[0]['HeadX(pix)'][i] <= border_P01) & (results.iloc[0]['HeadX(pix)'][i+1] >= border_P01):
+#         print i
+
+
+metaData = f.object().properties
+mmPerPix = metaData['X_mm_per_pixel']
+choiceZoneWidth_mm = 10
+choiceZoneWidth_pix = choiceZoneWidth_mm/mmPerPix
+choiceZoneBorders_P01 = [border_P01-choiceZoneWidth_pix, border_P01+choiceZoneWidth_pix]
+choiceZoneBorders_P10 = [border_P10-choiceZoneWidth_pix, border_P10+choiceZoneWidth_pix]
+
+
+EnteranceFromWindInletSide = []
+EnteranceFromNon_WindInletSide = []
+
+for i in range(len(results.iloc[0]['HeadX(pix)'])-1):
+    if (results.iloc[0]['HeadX(pix)'][i] <= choiceZoneBorders_P01) & ()
     
-    return
+    >= (border_P01-choiceZoneWidth_pix/2)):
+        print results.iloc[0]['HeadX(pix)'][i]
+
+
+# In[496]:
+
+metaData = f.object().properties
+mmPerPix = metaData['X_mm_per_pixel']
+
+
+# In[497]:
+
+10/mmPerPix
+
+
+# In[479]:
+
+plt.plot(range(len(results.iloc[0]['HeadX(pix)'])), results.iloc[0]['HeadX(pix)'])
 
 
 # ### Fractional time in the odorized zone
