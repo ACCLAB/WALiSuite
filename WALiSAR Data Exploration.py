@@ -72,11 +72,12 @@ print 'Length of the cXmm data:', len(Tracking)
 
 # ## Access to the data alternative 2
 
-# In[ ]:
+# In[559]:
 
 ## Get the data from a channel 2
-channel = f.object('Tracker','Speed_Av_mm_per_sec001')
+channel = f.object('ExperimentLog','Frame timer (ms)')
 data = channel.data
+len(data)
 #time = channel.time_track()
 
 
@@ -236,11 +237,11 @@ results = pd.DataFrame(temp)
 
 # ### Read all the tdms and corresponding pattern csv files in a directory into a pandas df
 
-# In[336]:
+# In[575]:
 
 def ReadExperimentData(directory):
     ## Generate a single dataframe from the .tdms and pattern files 
-    temp = {'Tdms file name':[],'Date':[],'Time':[],'Light type':[],'Light Intensity(uW/mm2)':[],'Wind status':[],
+    temp = {'Tdms file name':[],'Date':[],'Time':[],'mmPerPix':[],'Light type':[],'Light Intensity(uW/mm2)':[],'Wind status':[],
             'Satiety':[],'Genotype':[],'Sex':[],'Status':[],'Fly ID':[],'cX(pix)':[],'HeadX(pix)':[],'HeadY(pix)':[],
             'InLight':[],'First light contact index|P01':[],'First light contact index|P10':[],'LightON index|P01':[],
             'LightON index|P10':[],'Border|P01':[],'Border|P10':[]}
@@ -280,7 +281,11 @@ def ReadExperimentData(directory):
             lightType = tdmsNameNoExtension[6]
             windState = tdmsNameNoExtension[7]
             satiety = tdmsNameNoExtension[8]
-
+            
+            ## Get the mm per pixel coefficient
+            metaData = f.object().properties
+            mmPerPix = metaData['X_mm_per_pixel']
+            
             ## Get status info 
             if ('w1118' in genotype) | ('W1118' in genotype):
                 status = 'Parent'
@@ -340,6 +345,7 @@ def ReadExperimentData(directory):
                 temp['Tdms file name'].append(fname)
                 temp['Date'].append(date)
                 temp['Time'].append(time)
+                temp['mmPerPix'].append(mmPerPix)
                 temp['Light type'].append(lightType)
                 temp['Light Intensity(uW/mm2)'].append(intensity)
                 temp['Wind status'].append(windState)
@@ -353,7 +359,7 @@ def ReadExperimentData(directory):
                 temp['Border|P10'].append(P10_df.filter(regex='pix').iloc[1].values[flyIndex-1])
 
     ## Convert temp into a df
-    colOrder = ['Tdms file name','Date','Time','Light type','Light Intensity(uW/mm2)','Wind status',
+    colOrder = ['Tdms file name','Date','Time','mmPerPix','Light type','Light Intensity(uW/mm2)','Wind status',
                 'Satiety','Genotype','Sex','Status','Fly ID','cX(pix)','HeadX(pix)','HeadY(pix)',
                 'InLight','First light contact index|P01','First light contact index|P10','LightON index|P01',
                 'LightON index|P10','Border|P01','Border|P10']
@@ -362,14 +368,14 @@ def ReadExperimentData(directory):
     return results, numOfTdmsFiles
 
 
-# In[337]:
+# In[592]:
 
-directory = "C:/Users/tumkayat/Desktop/CodeRep/WALiSAR/BehaviroalDataAnalyses/20170417"
+directory = "C:/Users/tumkayat/Desktop/CodeRep/WALiSAR/BehaviroalDataAnalyses/20170417_SmallerData"
 results, numOfUploadedTdmsFiles = ReadExperimentData(directory)
 numOfUploadedTdmsFiles
 
 
-# In[338]:
+# In[593]:
 
 results
 
@@ -378,10 +384,10 @@ results
 
 # ### Preference index after light contact
 
-# In[411]:
+# In[586]:
 
 def PreferenceIndexAfterLightContact(df):
-    numberOfFlies = results.shape[0]
+    numberOfFlies = df.shape[0]
     PI_afterLightContact_P01 = []
     PI_afterLightContact_P10 = []
     
@@ -455,7 +461,7 @@ def MeanPreferenceIndexNoNANs(df):
     return droppedNans
 
 
-# In[414]:
+# In[594]:
 
 ## results is the original df that contains all the data, as well as individual preference index and the mean preference index 
 ## (In the PreferenceIndex_Mean, Nans are counted as not existing, i.e. P01 = 0.8, P10 = Nan, P_mean = 0.8)
@@ -464,9 +470,9 @@ def MeanPreferenceIndexNoNANs(df):
 results, PreferenceIndexDFDroppedNans = PreferenceIndexAfterLightContact(results)
 
 
-# ### Plotting the results
+# ### Plotting the Preference Index
 
-# In[428]:
+# In[595]:
 
 ## Prepare the dfs for Contrast plotting
 results = results.assign(Genotype_Sex_Satiety_LightType_Intensity_Wind = pd.Series(results['Genotype'] + '_' + results['Sex'] + '_' +
@@ -486,7 +492,7 @@ PreferenceIndexDFDroppedNans = PreferenceIndexDFDroppedNans.assign(Status_Sex_Sa
                              '_' + PreferenceIndexDFDroppedNans['Light Intensity(uW/mm2)'] + '_' + PreferenceIndexDFDroppedNans['Wind status'], index = PreferenceIndexDFDroppedNans.index))
 
 
-# In[430]:
+# In[584]:
 
 results['Status_Sex_Satiety_LightType_Intensity_Wind'].unique()
 
@@ -505,7 +511,19 @@ b
 
 # ### Preference index in the choice zone
 
-# In[499]:
+# In[585]:
+
+results
+
+
+# In[639]:
+
+## Function 1: Detect choice zone entrance indices, store them in the df
+## Pass the df to these functions:
+    ## Function 2: Sort and Plot the tracts as in Wilson paper _ this only needs the entrance indices
+    ## Function 3: Calculate Attraction Index from the exits _ this needs the exit indice, as well as coordination to decide 
+    ## whether traversel or reversal.
+
 
 # def PreferenceIndexinTheChoiceZone(df):
 #     ## Pseudo code
@@ -515,7 +533,7 @@ b
 #     # Plot the trajectories per fly, then for all flies as average
 #     return
 
-border_P01 = results.iloc[0]['Border|P01']
+
 
 # for i in range(len(results.iloc[0]['HeadX(pix)'])-1):
 #     if (results.iloc[0]['HeadX(pix)'][i] >= border_P01) & (results.iloc[0]['HeadX(pix)'][i+1] <= border_P01):
@@ -523,39 +541,193 @@ border_P01 = results.iloc[0]['Border|P01']
 #     elif (results.iloc[0]['HeadX(pix)'][i] <= border_P01) & (results.iloc[0]['HeadX(pix)'][i+1] >= border_P01):
 #         print i
 
+#def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
 
-metaData = f.object().properties
-mmPerPix = metaData['X_mm_per_pixel']
-choiceZoneWidth_mm = 10
+df = results.copy()
+choiceZoneWidth_mm = 10  
+EntranceToTheChoiceZoneFromTheWindPortEnd_P01 = []
+EntranceToTheChoiceZoneFromTheClosedEnd_P01 = []
+
+EntranceToTheChoiceZoneFromTheWindPortEnd_P10 = []
+EntranceToTheChoiceZoneFromTheClosedEnd_P10 = []
+
+numberOfFlies = df.shape[0]
+
+## get the mm to pix coefficient
+mmPerPix = df['mmPerPix'][0]
+
+## convert the zone width from mm to pix
 choiceZoneWidth_pix = choiceZoneWidth_mm/mmPerPix
-choiceZoneBorders_P01 = [border_P01-choiceZoneWidth_pix, border_P01+choiceZoneWidth_pix]
-choiceZoneBorders_P10 = [border_P10-choiceZoneWidth_pix, border_P10+choiceZoneWidth_pix]
+
+for fly in range(0,numberOfFlies):
+
+    ## one fly can have multiple decisions, therefore I will keep seperate lists per fly
+    flyDecisionList_theWindPortEnd_P01 = []
+    flyDecisionList_theClosedEnd_P01 = []
+
+    flyDecisionList_theWindPortEnd_P10 = []
+    flyDecisionList_theClosedEnd_P10 = []
+
+    ## get border coordinates for the two light events per fly
+    border_P01 = df.iloc[fly]['Border|P01']
+    border_P10 = df.iloc[fly]['Border|P10'] 
+
+    ## identify the choice zone lef-right borders per chamber, since borders change across chambers, even P01 vs P10 
+    choiceZoneBorders_P01 = [border_P01-choiceZoneWidth_pix/2, border_P01+choiceZoneWidth_pix/2]
+    choiceZoneBorders_P10 = [border_P10-choiceZoneWidth_pix/2, border_P10+choiceZoneWidth_pix/2]
+   
+    ## NTS: In Adam's paper, only when flies enter and exit counted as a decision.
+
+    ## get the indices where P01 and P10 were taking place      
+    P01_startIndex, P01_endIndex = df.iloc[fly]['LightON index|P01']
+    P10_startIndex, P10_endIndex = df.iloc[fly]['LightON index|P10']
+
+    ## get head X coordinates while the light was ON, P01 and P10
+    headXcoordIn_P01 = df.iloc[fly]['HeadX(pix)'][P01_startIndex:P01_endIndex]
+    headXcoordIn_P10 = df.iloc[fly]['HeadX(pix)'][P10_startIndex:P10_endIndex]
+
+    ## go thru the head X coordinates during the P01 event
+    for i in range(len(headXcoordIn_P01)-1):     
+        
+        ## if entering to the zone from the wind port end
+        if (headXcoordIn_P01[i] <= choiceZoneBorders_P01[0]) & (headXcoordIn_P01[i+1] >= choiceZoneBorders_P01[0]):
+
+            ## now detect the exit of this entrance
+            for j in range(len(headXcoordIn_P01[i:])-1):
+
+                if (headXcoordIn_P01[i:][j] <= choiceZoneBorders_P01[0]) | (headXcoordIn_P01[i:][j] >= choiceZoneBorders_P01[1]):
+
+                    ## keep the info as [enterance index (in the zone), exit index (out of the zone),
+                    ##                   enterance headX              ,                   exit headX]
+                    temp = [i+1, i+j,headXcoordIn_P01[i+1], headXcoordIn_P01[i+j]]
+
+                else:
+                    ## there isn't any exit following the entrance, then keep only the enterance info
+                    temp = [i+1, headXcoordIn_P01[i+1]]
+
+            flyDecisionList_theWindPortEnd_P01.append(temp)
+
+        ## if entering to the zone from the closed end
+        if (headXcoordIn_P01[i] >= choiceZoneBorders_P01[1]) & (headXcoordIn_P01[i+1] <= choiceZoneBorders_P01[1]):
+
+            ## now detect the exit of this entrance
+            for j in range(len(headXcoordIn_P01[i:])-1):
+
+                if (headXcoordIn_P01[i:][j] <= choiceZoneBorders_P01[0]) | (headXcoordIn_P01[i:][j] >= choiceZoneBorders_P01[1]):
+
+                    ## keep the info as [enterance index (in the zone), exit index (out of the zone),
+                    ##                   enterance headX              ,                   exit headX]
+                    temp = [i+1, i+j,headXcoordIn_P01[i+1], headXcoordIn_P01[i+j]]
+
+                else:
+                    ## there isn't any exit following the entrance, then keep only the enterance info
+                    temp = [i+1, headXcoordIn_P01[i+1]]
+
+            flyDecisionList_theClosedEnd_P01.append(temp)
+
+    ## go thru the head X coordinates during the P10 event
+    for i in range(len(headXcoordIn_P10)-1):     
+
+        ## if entering to the zone from the wind port end
+        if (headXcoordIn_P10[i] <= choiceZoneBorders_P10[0]) & (headXcoordIn_P10[i+1] >= choiceZoneBorders_P10[0]):
+
+            ## now detect the exit of this entrance
+            for j in range(len(headXcoordIn_P10[i:])-1):
+
+                if (headXcoordIn_P10[i:][j] <= choiceZoneBorders_P10[0]) | (headXcoordIn_P10[i:][j] >= choiceZoneBorders_P10[1]):
+
+                    ## keep the info as [enterance index (in the zone), exit index (out of the zone),
+                    ##                   enterance headX              ,                   exit headX]
+                    temp = [i+1, i+j,headXcoordIn_P10[i+1], headXcoordIn_P10[i+j]]
+
+                else:
+                    ## there isn't any exit following the entrance, then keep only the enterance info
+                    temp = [i+1, headXcoordIn_P10[i+1]]
+
+            flyDecisionList_theWindPortEnd_P10.append(temp)
+
+        ## if entering to the zone from the closed end
+        if (headXcoordIn_P10[i] >= choiceZoneBorders_P10[1]) & (headXcoordIn_P10[i+1] <= choiceZoneBorders_P10[1]):
+
+            ## now detect the exit of this entrance
+            for j in range(len(headXcoordIn_P10[i:])-1):
+
+                if (headXcoordIn_P10[i:][j] <= choiceZoneBorders_P10[0]) | (headXcoordIn_P10[i:][j] >= choiceZoneBorders_P10[1]):
+
+                    ## keep the info as [enterance index (in the zone), exit index (out of the zone),
+                    ##                   enterance headX              ,                   exit headX]
+                    temp = [i+1, i+j,headXcoordIn_P10[i+1], headXcoordIn_P10[i+j]]
+
+                else:
+                    ## there isn't any exit following the entrance, then keep only the enterance info
+                    temp = [i+1, headXcoordIn_P10[i+1]]
+
+            flyDecisionList_theClosedEnd_P10.append(temp)
 
 
-EnteranceFromWindInletSide = []
-EnteranceFromNon_WindInletSide = []
+    EntranceToTheChoiceZoneFromTheWindPortEnd_P01.append(flyDecisionList_theWindPortEnd_P01)
+    EntranceToTheChoiceZoneFromTheClosedEnd_P01.append(flyDecisionList_theClosedEnd_P01)
 
-for i in range(len(results.iloc[0]['HeadX(pix)'])-1):
-    if (results.iloc[0]['HeadX(pix)'][i] <= choiceZoneBorders_P01) & ()
-    
-    >= (border_P01-choiceZoneWidth_pix/2)):
-        print results.iloc[0]['HeadX(pix)'][i]
+    EntranceToTheChoiceZoneFromTheWindPortEnd_P10.append(flyDecisionList_theWindPortEnd_P10)
+    EntranceToTheChoiceZoneFromTheClosedEnd_P10.append(flyDecisionList_theClosedEnd_P10)
+
+    #return len(EntranceToTheChoiceZoneFromTheWindPortEnd_P01)
 
 
-# In[496]:
+# In[622]:
+
+DetectEntraceandExitIndicesToTheChoiceZone(results)
+
+
+# In[644]:
+
+len(EntranceToTheChoiceZoneFromTheClosedEnd_P10)
+
+
+# In[619]:
+
+choiceZoneBorders_P01[0]
+
+
+# In[574]:
+
+headXcoordIn_P01[83:87]
+
+
+# In[562]:
+
+sns.set(style="ticks", palette="bright", color_codes=True)
+plt.plot(range(len(headXcoordIn_P10)), headXcoordIn_P10,color='black')
+plt.axhline(choiceZoneBorders_P10[0], color='grey')
+plt.axhline(choiceZoneBorders_P10[1], color='grey')
+plt.axhspan(0,border_P10,color='red',alpha = 0.3)
+sns.despine()
+
+
+# In[557]:
 
 metaData = f.object().properties
-mmPerPix = metaData['X_mm_per_pixel']
+metaData
 
 
-# In[497]:
+# In[519]:
 
-10/mmPerPix
+a,b = results.iloc[0]['LightON index|P01']
+
+
+# In[521]:
+
+print b
+
+
+# In[511]:
+
+results.iloc[0]['HeadX(pix)'][0:2]
 
 
 # In[479]:
 
-plt.plot(range(len(results.iloc[0]['HeadX(pix)'])), results.iloc[0]['HeadX(pix)'])
+
 
 
 # ### Fractional time in the odorized zone
