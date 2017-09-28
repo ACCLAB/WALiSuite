@@ -705,7 +705,7 @@ headX_P01[668]
 df
 
 
-# In[1041]:
+# In[1047]:
 
 #def VisualizeTheChoiceZoneTrajectories(df, groupBy, durationInframes = 50, groupsToPlot = None, 
 #                                        mean = False, CI = 95, figSize = (3,5), hspace = .5, wspace = .3):
@@ -743,25 +743,25 @@ if groupsToPlot == None:
             singleFlyEntranceIndexList_TheWindSide_P01 = [item[0] for item in singleFlyEntranceData_TheWindSide_P01 if item]
 
             for index in singleFlyEntranceIndexList_TheWindSide_P01:
-                axs[counter+0].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes],color='black')
+                axs[counter+0].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
 
             singleFlyEntranceData_TheClosedSide_P01 = singleFlyDf['FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
             singleFlyEntranceIndexList_TheClosedSide_P01 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P01 if item]
 
             for index in singleFlyEntranceIndexList_TheClosedSide_P01:
-                axs[counter+3].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes],color='black')
+                axs[counter+3].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
 
             singleFlyEntranceData_TheWindSide_P10 = singleFlyDf['FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
             singleFlyEntranceIndexList_TheWindSide_P10 = [item[0] for item in singleFlyEntranceData_TheWindSide_P10 if item]
 
             for index in singleFlyEntranceIndexList_TheWindSide_P10:
-                axs[counter+6].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes],color='black')
+                axs[counter+6].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
 
             singleFlyEntranceData_TheClosedSide_P10 = singleFlyDf['FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
             singleFlyEntranceIndexList_TheClosedSide_P10 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P10 if item]
 
             for index in singleFlyEntranceIndexList_TheClosedSide_P10:
-                axs[counter+9].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes],color='black')
+                axs[counter+9].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
         
         fontdict = {'fontsize':8}
         axs[counter+0].set_title('P01_from Wind End| %s' %(group),fontdict=fontdict)        
