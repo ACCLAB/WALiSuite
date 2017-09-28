@@ -375,7 +375,7 @@ results, numOfUploadedTdmsFiles = ReadExperimentData(directory)
 numOfUploadedTdmsFiles
 
 
-# In[593]:
+# In[688]:
 
 results
 
@@ -516,7 +516,7 @@ b
 results
 
 
-# In[639]:
+# In[1016]:
 
 ## Function 1: Detect choice zone entrance indices, store them in the df
 ## Pass the df to these functions:
@@ -524,205 +524,397 @@ results
     ## Function 3: Calculate Attraction Index from the exits _ this needs the exit indice, as well as coordination to decide 
     ## whether traversel or reversal.
 
+def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
 
-# def PreferenceIndexinTheChoiceZone(df):
-#     ## Pseudo code
-#     # Get light border info per fly, generate a choice zone range
-#     # Detect all the midpoint crossing of the fly
-#     # Get 2-3 sec data around the crossing time point
-#     # Plot the trajectories per fly, then for all flies as average
-#     return
+    ## Lists to store the entrance and related exit info per fly for P01 and P10
+    FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX = []
+    FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX = []
 
+    FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX = []
+    FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX = []
+    
+    ## Lists to stores choice zone borders per fly
+    ChoiceZoneBordersPerFly_P01 = []
+    ChoiceZoneBordersPerFly_P10 = []
+    
+    numberOfFlies = df.shape[0]
 
+    ## get the mm to pix coefficient
+    mmPerPix = df['mmPerPix'][0]
 
-# for i in range(len(results.iloc[0]['HeadX(pix)'])-1):
-#     if (results.iloc[0]['HeadX(pix)'][i] >= border_P01) & (results.iloc[0]['HeadX(pix)'][i+1] <= border_P01):
-#         print i
-#     elif (results.iloc[0]['HeadX(pix)'][i] <= border_P01) & (results.iloc[0]['HeadX(pix)'][i+1] >= border_P01):
-#         print i
+    ## convert the zone width from mm to pix
+    choiceZoneWidth_pix = choiceZoneWidth_mm/mmPerPix
 
-#def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
+    for fly in range(0,numberOfFlies):
 
-df = results.copy()
-choiceZoneWidth_mm = 10  
-EntranceToTheChoiceZoneFromTheWindPortEnd_P01 = []
-EntranceToTheChoiceZoneFromTheClosedEnd_P01 = []
+        ## one fly can have multiple decisions, therefore I will keep seperate lists per fly
+        flyDecisionList_theWindPortEnd_P01 = []
+        flyDecisionList_theClosedEnd_P01 = []
 
-EntranceToTheChoiceZoneFromTheWindPortEnd_P10 = []
-EntranceToTheChoiceZoneFromTheClosedEnd_P10 = []
+        flyDecisionList_theWindPortEnd_P10 = []
+        flyDecisionList_theClosedEnd_P10 = []
 
-numberOfFlies = df.shape[0]
+        ## get border coordinates for the two light events per fly
+        border_P01 = df.iloc[fly]['Border|P01']
+        border_P10 = df.iloc[fly]['Border|P10'] 
 
-## get the mm to pix coefficient
-mmPerPix = df['mmPerPix'][0]
-
-## convert the zone width from mm to pix
-choiceZoneWidth_pix = choiceZoneWidth_mm/mmPerPix
-
-for fly in range(0,numberOfFlies):
-
-    ## one fly can have multiple decisions, therefore I will keep seperate lists per fly
-    flyDecisionList_theWindPortEnd_P01 = []
-    flyDecisionList_theClosedEnd_P01 = []
-
-    flyDecisionList_theWindPortEnd_P10 = []
-    flyDecisionList_theClosedEnd_P10 = []
-
-    ## get border coordinates for the two light events per fly
-    border_P01 = df.iloc[fly]['Border|P01']
-    border_P10 = df.iloc[fly]['Border|P10'] 
-
-    ## identify the choice zone lef-right borders per chamber, since borders change across chambers, even P01 vs P10 
-    choiceZoneBorders_P01 = [border_P01-choiceZoneWidth_pix/2, border_P01+choiceZoneWidth_pix/2]
-    choiceZoneBorders_P10 = [border_P10-choiceZoneWidth_pix/2, border_P10+choiceZoneWidth_pix/2]
-   
-    ## NTS: In Adam's paper, only when flies enter and exit counted as a decision.
-
-    ## get the indices where P01 and P10 were taking place      
-    P01_startIndex, P01_endIndex = df.iloc[fly]['LightON index|P01']
-    P10_startIndex, P10_endIndex = df.iloc[fly]['LightON index|P10']
-
-    ## get head X coordinates while the light was ON, P01 and P10
-    headXcoordIn_P01 = df.iloc[fly]['HeadX(pix)'][P01_startIndex:P01_endIndex]
-    headXcoordIn_P10 = df.iloc[fly]['HeadX(pix)'][P10_startIndex:P10_endIndex]
-
-    ## go thru the head X coordinates during the P01 event
-    for i in range(len(headXcoordIn_P01)-1):     
+        ## identify the choice zone lef-right borders per chamber, since borders change across chambers, even P01 vs P10 
+        choiceZoneBorders_P01 = [border_P01-choiceZoneWidth_pix/2, border_P01+choiceZoneWidth_pix/2]
+        choiceZoneBorders_P10 = [border_P10-choiceZoneWidth_pix/2, border_P10+choiceZoneWidth_pix/2]
         
-        ## if entering to the zone from the wind port end
-        if (headXcoordIn_P01[i] <= choiceZoneBorders_P01[0]) & (headXcoordIn_P01[i+1] >= choiceZoneBorders_P01[0]):
+        ## store th border info to be attached to the df
+        ChoiceZoneBordersPerFly_P01.append(choiceZoneBorders_P01)
+        ChoiceZoneBordersPerFly_P10.append(choiceZoneBorders_P10)
+        ## NTS: In Adam's paper, only when flies enter and exit counted as a decision.
 
-            ## now detect the exit of this entrance
-            for j in range(len(headXcoordIn_P01[i:])-1):
+        ## get the indices where P01 and P10 were taking place      
+        P01_startIndex, P01_endIndex = df.iloc[fly]['LightON index|P01']
+        P10_startIndex, P10_endIndex = df.iloc[fly]['LightON index|P10']
 
-                if (headXcoordIn_P01[i:][j] <= choiceZoneBorders_P01[0]) | (headXcoordIn_P01[i:][j] >= choiceZoneBorders_P01[1]):
+        ## get head X coordinates while the light was ON, P01 and P10
+        headXcoordIn_P01 = df.iloc[fly]['HeadX(pix)'][P01_startIndex:P01_endIndex]
+        headXcoordIn_P10 = df.iloc[fly]['HeadX(pix)'][P10_startIndex:P10_endIndex]
 
-                    ## keep the info as [enterance index (in the zone), exit index (out of the zone),
-                    ##                   enterance headX              ,                   exit headX]
-                    temp = [i+1, i+j,headXcoordIn_P01[i+1], headXcoordIn_P01[i+j]]
+        ## go thru the head X coordinates during the P01 event to find entrances and related exits(if any)
+        for i in range(len(headXcoordIn_P01)-1): 
+            
+            ## if entering to the zone from the wind port end
+            if (headXcoordIn_P01[i] < choiceZoneBorders_P01[0]) & (headXcoordIn_P01[i+1] > choiceZoneBorders_P01[0]):
+                
+                ## store the entrance info [entrance index, entrance coor]
+                temp = [i+1, headXcoordIn_P01[i+1]]
+                
+                ## now detect the exit of this entrance
+                for j in range(len(headXcoordIn_P01[i:])-1):
 
-                else:
-                    ## there isn't any exit following the entrance, then keep only the enterance info
-                    temp = [i+1, headXcoordIn_P01[i+1]]
+                    if (headXcoordIn_P01[i:][j+1] < choiceZoneBorders_P01[0]) | (headXcoordIn_P01[i:][j+1] > choiceZoneBorders_P01[1]):
 
-            flyDecisionList_theWindPortEnd_P01.append(temp)
+                        ## attach the exit to the temp list [entrance index, entrance coor, exit index, exit coor]
+                        temp.append(i+j+1)
+                        temp.append(headXcoordIn_P01[i+j+1])
+                        break
 
-        ## if entering to the zone from the closed end
-        if (headXcoordIn_P01[i] >= choiceZoneBorders_P01[1]) & (headXcoordIn_P01[i+1] <= choiceZoneBorders_P01[1]):
+                flyDecisionList_theWindPortEnd_P01.append(temp)
+                
+            ## found an entrance from the closed end of the chamber
+            if (headXcoordIn_P01[i] > choiceZoneBorders_P01[1]) & (headXcoordIn_P01[i+1] < choiceZoneBorders_P01[1]):
 
-            ## now detect the exit of this entrance
-            for j in range(len(headXcoordIn_P01[i:])-1):
+                ## store the entrance info [entrance index, entrance coor]
+                temp = [i+1, headXcoordIn_P01[i+1]]
 
-                if (headXcoordIn_P01[i:][j] <= choiceZoneBorders_P01[0]) | (headXcoordIn_P01[i:][j] >= choiceZoneBorders_P01[1]):
+                ## now detect the exit of this entrance, if any
+                for j in range(len(headXcoordIn_P01[i:])-1):
 
-                    ## keep the info as [enterance index (in the zone), exit index (out of the zone),
-                    ##                   enterance headX              ,                   exit headX]
-                    temp = [i+1, i+j,headXcoordIn_P01[i+1], headXcoordIn_P01[i+j]]
+                    if (headXcoordIn_P01[i:][j+1] < choiceZoneBorders_P01[0]) | (headXcoordIn_P01[i:][j+1] > choiceZoneBorders_P01[1]):
 
-                else:
-                    ## there isn't any exit following the entrance, then keep only the enterance info
-                    temp = [i+1, headXcoordIn_P01[i+1]]
+                        ## attach the exit to the temp list [entrance index, entrance coor, exit index, exit coor]
+                        temp.append(i+j+1)
+                        temp.append(headXcoordIn_P01[i+j+1])
+                        break
+                        
+                ## add this decision to the list before searching for other decisions of the same fly 
+                flyDecisionList_theClosedEnd_P01.append(temp)
+        
+        
+        ## go thru the head X coordinates during the P10 event to find entrances and related exits(if any)
+        for i in range(len(headXcoordIn_P10)-1): 
+            
+            ## if entering to the zone from the wind port end
+            if (headXcoordIn_P10[i] < choiceZoneBorders_P10[0]) & (headXcoordIn_P10[i+1] > choiceZoneBorders_P10[0]):
+                
+                ## store the entrance info [entrance index, entrance coor]
+                temp = [i+1, headXcoordIn_P10[i+1]]
+                
+                ## now detect the exit of this entrance
+                for j in range(len(headXcoordIn_P10[i:])-1):
 
-            flyDecisionList_theClosedEnd_P01.append(temp)
+                    if (headXcoordIn_P10[i:][j+1] < choiceZoneBorders_P10[0]) | (headXcoordIn_P10[i:][j+1] > choiceZoneBorders_P10[1]):
 
-    ## go thru the head X coordinates during the P10 event
-    for i in range(len(headXcoordIn_P10)-1):     
+                        ## attach the exit to the temp list [entrance index, entrance coor, exit index, exit coor]
+                        temp.append(i+j+1)
+                        temp.append(headXcoordIn_P10[i+j+1])
+                        break
 
-        ## if entering to the zone from the wind port end
-        if (headXcoordIn_P10[i] <= choiceZoneBorders_P10[0]) & (headXcoordIn_P10[i+1] >= choiceZoneBorders_P10[0]):
+                flyDecisionList_theWindPortEnd_P10.append(temp)
+                
+            ## found an entrance from the closed end of the chamber
+            if (headXcoordIn_P10[i] > choiceZoneBorders_P10[1]) & (headXcoordIn_P10[i+1] < choiceZoneBorders_P10[1]):
 
-            ## now detect the exit of this entrance
-            for j in range(len(headXcoordIn_P10[i:])-1):
+                ## store the entrance info [entrance index, entrance coor]
+                temp = [i+1, headXcoordIn_P10[i+1]]
 
-                if (headXcoordIn_P10[i:][j] <= choiceZoneBorders_P10[0]) | (headXcoordIn_P10[i:][j] >= choiceZoneBorders_P10[1]):
+                ## now detect the exit of this entrance, if any
+                for j in range(len(headXcoordIn_P10[i:])-1):
 
-                    ## keep the info as [enterance index (in the zone), exit index (out of the zone),
-                    ##                   enterance headX              ,                   exit headX]
-                    temp = [i+1, i+j,headXcoordIn_P10[i+1], headXcoordIn_P10[i+j]]
+                    if (headXcoordIn_P10[i:][j+1] < choiceZoneBorders_P10[0]) | (headXcoordIn_P10[i:][j+1] > choiceZoneBorders_P10[1]):
 
-                else:
-                    ## there isn't any exit following the entrance, then keep only the enterance info
-                    temp = [i+1, headXcoordIn_P10[i+1]]
+                        ## attach the exit to the temp lis, [entrance index, entrance coor, exit index, exit coor]
+                        temp.append(i+j+1)
+                        temp.append(headXcoordIn_P10[i+j+1])
+                        break
+                        
+                ## add this decision to the list before searching for other decisions of the same fly 
+                flyDecisionList_theClosedEnd_P10.append(temp)
 
-            flyDecisionList_theWindPortEnd_P10.append(temp)
+        FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX.append(flyDecisionList_theWindPortEnd_P01)
+        FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX.append(flyDecisionList_theClosedEnd_P01)
 
-        ## if entering to the zone from the closed end
-        if (headXcoordIn_P10[i] >= choiceZoneBorders_P10[1]) & (headXcoordIn_P10[i+1] <= choiceZoneBorders_P10[1]):
-
-            ## now detect the exit of this entrance
-            for j in range(len(headXcoordIn_P10[i:])-1):
-
-                if (headXcoordIn_P10[i:][j] <= choiceZoneBorders_P10[0]) | (headXcoordIn_P10[i:][j] >= choiceZoneBorders_P10[1]):
-
-                    ## keep the info as [enterance index (in the zone), exit index (out of the zone),
-                    ##                   enterance headX              ,                   exit headX]
-                    temp = [i+1, i+j,headXcoordIn_P10[i+1], headXcoordIn_P10[i+j]]
-
-                else:
-                    ## there isn't any exit following the entrance, then keep only the enterance info
-                    temp = [i+1, headXcoordIn_P10[i+1]]
-
-            flyDecisionList_theClosedEnd_P10.append(temp)
-
-
-    EntranceToTheChoiceZoneFromTheWindPortEnd_P01.append(flyDecisionList_theWindPortEnd_P01)
-    EntranceToTheChoiceZoneFromTheClosedEnd_P01.append(flyDecisionList_theClosedEnd_P01)
-
-    EntranceToTheChoiceZoneFromTheWindPortEnd_P10.append(flyDecisionList_theWindPortEnd_P10)
-    EntranceToTheChoiceZoneFromTheClosedEnd_P10.append(flyDecisionList_theClosedEnd_P10)
-
-    #return len(EntranceToTheChoiceZoneFromTheWindPortEnd_P01)
-
-
-# In[622]:
-
-DetectEntraceandExitIndicesToTheChoiceZone(results)
-
-
-# In[644]:
-
-len(EntranceToTheChoiceZoneFromTheClosedEnd_P10)
-
-
-# In[619]:
-
-choiceZoneBorders_P01[0]
+        FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX.append(flyDecisionList_theWindPortEnd_P10)
+        FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX.append(flyDecisionList_theClosedEnd_P10)
+    
+    df = df.assign(ChoiceZoneBordersperFly_P01 = pd.Series(ChoiceZoneBordersPerFly_P01, index=df.index),
+                   ChoiceZoneBordersperFly_P10 = pd.Series(ChoiceZoneBordersPerFly_P10, index=df.index),
+                   FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX = pd.Series(FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX, index=df.index),
+                   FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX = pd.Series(FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX, index=df.index),
+                   FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX = pd.Series(FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX, index=df.index),
+                   FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX = pd.Series(FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX, index=df.index))
+    return df
 
 
-# In[574]:
+# In[856]:
 
-headXcoordIn_P01[83:87]
+dff = DetectEntraceandExitIndicesToTheChoiceZone(results)
 
 
-# In[562]:
+# In[857]:
+
+dff.iloc[2]
+
+
+# In[814]:
+
+flyID = 2
+
+headX_P01 = dff.iloc[flyID]['HeadX(pix)'][dff.iloc[flyID]['LightON index|P01'][0]:dff.iloc[flyID]['LightON index|P01'][1]]
+headX_P10 = dff.iloc[flyID]['HeadX(pix)'][dff.iloc[flyID]['LightON index|P10'][0]:dff.iloc[flyID]['LightON index|P10'][1]]
+
+choiceZone_P01 = dff.iloc[flyID]['ChoiceZoneBordersperFly_P01']
+choiceZone_P10 = dff.iloc[flyID]['ChoiceZoneBordersperFly_P10']
+
+border_P01 = dff.iloc[flyID]['Border|P01']
+border_P10 = dff.iloc[flyID]['Border|P10']
+
+
+# In[713]:
+
+headX_P01[668]
+
+
+# In[854]:
+
+df
+
+
+# In[1041]:
+
+#def VisualizeTheChoiceZoneTrajectories(df, groupBy, durationInframes = 50, groupsToPlot = None, 
+#                                        mean = False, CI = 95, figSize = (3,5), hspace = .5, wspace = .3):
+    
+# df_grouped = df.groupby(groupBy)
+# numOfGroups = len(df_grouped)
+figSize = (14,14)
+hspace = .5
+wspace = .3
+durationInframes = 50
+groupsToPlot = None
+df_grouped = dff.groupby('Genotype_Sex_Satiety_LightType_Intensity_Wind')
+numOfGroups = len(df_grouped)
+
+fig, axs = plt.subplots(4,3, figsize=figSize, facecolor='w', edgecolor='k')
+fig.subplots_adjust(hspace = hspace, wspace = wspace)
+axs = axs.ravel() 
+
+if groupsToPlot == None:
+    counter = 0
+    ## for each group of flies (i.e, parent vs offspring), I'm going to plot 4 types of decision zone trajectories:
+    ## P01: entrance from wind and closed end, P10: entrance from wind and closed end
+    for group,data in df_grouped:
+        ## mean border and choice zone borders per group of flies
+        meanBorder_P01 = np.mean(np.asanyarray(data['Border|P01'].tolist()),axis=0)
+        meanBorder_P10 = np.mean(np.asanyarray(data['Border|P10'].tolist()),axis=0)
+        meanChoiceZoneBorders_P01 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P01'].tolist()),axis=0)
+        meanChoiceZoneBorders_P10 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P10'].tolist()),axis=0)
+
+        for fly in range(len(data)):
+            singleFlyDf = data.iloc[fly]
+            singleFlyHeadX = singleFlyDf['HeadX(pix)']
+
+            singleFlyEntranceData_TheWindSide_P01 = singleFlyDf['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheWindSide_P01 = [item[0] for item in singleFlyEntranceData_TheWindSide_P01 if item]
+
+            for index in singleFlyEntranceIndexList_TheWindSide_P01:
+                axs[counter+0].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes],color='black')
+
+            singleFlyEntranceData_TheClosedSide_P01 = singleFlyDf['FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheClosedSide_P01 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P01 if item]
+
+            for index in singleFlyEntranceIndexList_TheClosedSide_P01:
+                axs[counter+3].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes],color='black')
+
+            singleFlyEntranceData_TheWindSide_P10 = singleFlyDf['FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheWindSide_P10 = [item[0] for item in singleFlyEntranceData_TheWindSide_P10 if item]
+
+            for index in singleFlyEntranceIndexList_TheWindSide_P10:
+                axs[counter+6].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes],color='black')
+
+            singleFlyEntranceData_TheClosedSide_P10 = singleFlyDf['FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheClosedSide_P10 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P10 if item]
+
+            for index in singleFlyEntranceIndexList_TheClosedSide_P10:
+                axs[counter+9].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes],color='black')
+        
+        fontdict = {'fontsize':8}
+        axs[counter+0].set_title('P01_from Wind End| %s' %(group),fontdict=fontdict)        
+        axs[counter+0].axhline(meanChoiceZoneBorders_P01[0],color='grey')        
+        axs[counter+0].axhline(meanChoiceZoneBorders_P01[1],color='grey')
+        axs[counter+0].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
+        axs[counter+0].set_ylim(30,110)
+
+        axs[counter+3].set_title('P01_from Closed End| %s' %(group),fontdict=fontdict)
+        axs[counter+3].axhline(meanChoiceZoneBorders_P01[0],color='grey')
+        axs[counter+3].axhline(meanChoiceZoneBorders_P01[1],color='grey') 
+        axs[counter+3].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
+        axs[counter+3].set_ylim(30,110)
+
+        axs[counter+6].set_title('P10_from Wind End| %s' %(group),fontdict=fontdict)
+        axs[counter+6].axhline(meanChoiceZoneBorders_P10[0],color='grey')
+        axs[counter+6].axhline(meanChoiceZoneBorders_P10[1],color='grey') 
+        axs[counter+6].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
+        axs[counter+6].set_ylim(30,110)
+
+        axs[counter+9].set_title('P10_from Closed End| %s' %(group),fontdict=fontdict)
+        axs[counter+9].axhline(meanChoiceZoneBorders_P10[0],color='grey')
+        axs[counter+9].axhline(meanChoiceZoneBorders_P10[1],color='grey')
+        axs[counter+9].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
+        axs[counter+9].set_ylim(30,110)
+        
+        counter += 1
+        
+sns.set(style="ticks", palette="bright", color_codes=True)
+sns.despine()
+
+    #return fig, meanChoiceZoneBorders_P01[0]
+
+
+# In[1020]:
+
+f, b = VisualizeTheChoiceZoneTrajectories(dff, 'Status_Sex_Satiety_LightType_Intensity_Wind')
+b
+
+
+# In[1014]:
+
+results
+
+
+# In[1007]:
+
+fig = plt.figure(figsize=(10,6))
+
+ax1 = fig.add_subplot(4,3,1)
+ax2 = fig.add_subplot(4,3,2)
+ax3 = fig.add_subplot(433)
+ax4 = fig.add_subplot(4,3,11)
+
+i = 50
+ax1.plot(range(50), headX_P01[i:i+50],color='black')
+ax1.axhline(choiceZone_P01[0], color='grey')
+ax1.axhline(choiceZone_P01[1], color='grey')
+
+i = 150
+ax2.plot(range(50), headX_P01[i:i+50],color='black')
+ax2.axhline(choiceZone_P01[0], color='grey')
+ax2.axhline(choiceZone_P01[1], color='grey')
+
+i = 250
+ax3.plot(range(50), headX_P01[i:i+50],color='black')
+ax3.axhline(choiceZone_P01[0], color='grey')
+ax3.axhline(choiceZone_P01[1], color='grey')
+
+i = 250
+ax4.plot(range(50), headX_P01[i:i+50],color='black')
+ax4.axhline(choiceZone_P01[0], color='grey')
+ax4.axhline(choiceZone_P01[1], color='grey')
+ax4.set_title('shashahsa')
+plt.tight_layout(w_pad=10)
+
+
+# In[862]:
+
+df = dff.groupby('Genotype_Sex_Satiety_LightType_Intensity_Wind')
+
+
+# In[1005]:
+
+fig, axs = plt.subplots(4,3, figsize=(8, 6), facecolor='w', edgecolor='k')
+fig.subplots_adjust(hspace = .5, wspace=.5)
+axs = axs.ravel()
+
+
+# In[970]:
+
+a
+
+
+# In[828]:
+
+entryIndexList = [dff.iloc[flyID]['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX'][0][0],
+                  dff.iloc[flyID]['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX'][1][0]]
+
+
+# In[838]:
+
+## Plot only around the decisions
+fig = plt.figure(figsize=(3,5))
+ax1 = fig.add_subplot(111)
 
 sns.set(style="ticks", palette="bright", color_codes=True)
-plt.plot(range(len(headXcoordIn_P10)), headXcoordIn_P10,color='black')
-plt.axhline(choiceZoneBorders_P10[0], color='grey')
-plt.axhline(choiceZoneBorders_P10[1], color='grey')
+ax1.axhspan(border_P01,145,color='red',alpha = 0.3)
+sns.despine()
+ax1.set_ylim(40,120)
+
+for i in entryIndexList:
+
+    ax1.plot(range(50), headX_P01[i:i+50],color='black')
+    ax1.axhline(choiceZone_P01[0], color='grey')
+    ax1.axhline(choiceZone_P01[1], color='grey')
+
+
+# In[816]:
+
+# P10
+
+sns.set(style="ticks", palette="bright", color_codes=True)
+plt.plot(range(len(headX_P10)), headX_P10,color='black')
+plt.axhline(choiceZone_P10[0], color='grey')
+plt.axhline(choiceZone_P10[1], color='grey')
 plt.axhspan(0,border_P10,color='red',alpha = 0.3)
 sns.despine()
 
 
-# In[557]:
-
-metaData = f.object().properties
-metaData
+# In[787]:
 
 
-# In[519]:
-
-a,b = results.iloc[0]['LightON index|P01']
 
 
-# In[521]:
+# In[788]:
 
-print b
+decisions
 
 
-# In[511]:
+# In[748]:
 
-results.iloc[0]['HeadX(pix)'][0:2]
+headX_P01[667:][8]
+
+
+# In[791]:
+
+headX_P01[677]
+
+
+# In[717]:
+
+choiceZone_P01
 
 
 # In[479]:
