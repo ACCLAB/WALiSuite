@@ -671,14 +671,14 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
     return df
 
 
-# In[856]:
+# In[1052]:
 
 dff = DetectEntraceandExitIndicesToTheChoiceZone(results)
 
 
-# In[857]:
+# In[1053]:
 
-dff.iloc[2]
+dff
 
 
 # In[814]:
@@ -705,106 +705,132 @@ headX_P01[668]
 df
 
 
-# In[1047]:
+# In[1114]:
 
-#def VisualizeTheChoiceZoneTrajectories(df, groupBy, durationInframes = 50, groupsToPlot = None, 
-#                                        mean = False, CI = 95, figSize = (3,5), hspace = .5, wspace = .3):
+def VisualizeGroupsOfData(group,data,counter,numOfGroups,axs):
     
-# df_grouped = df.groupby(groupBy)
-# numOfGroups = len(df_grouped)
-figSize = (14,14)
-hspace = .5
-wspace = .3
-durationInframes = 50
-groupsToPlot = None
-df_grouped = dff.groupby('Genotype_Sex_Satiety_LightType_Intensity_Wind')
-numOfGroups = len(df_grouped)
+    meanBorder_P01 = np.mean(np.asanyarray(data['Border|P01'].tolist()),axis=0)
+    meanBorder_P10 = np.mean(np.asanyarray(data['Border|P10'].tolist()),axis=0)
+    meanChoiceZoneBorders_P01 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P01'].tolist()),axis=0)
+    meanChoiceZoneBorders_P10 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P10'].tolist()),axis=0)
+    
+    for fly in range(len(data)):
+        singleFlyDf = data.iloc[fly]
+        singleFlyHeadX = singleFlyDf['HeadX(pix)']
 
-fig, axs = plt.subplots(4,3, figsize=figSize, facecolor='w', edgecolor='k')
-fig.subplots_adjust(hspace = hspace, wspace = wspace)
-axs = axs.ravel() 
+        singleFlyEntranceData_TheWindSide_P01 = singleFlyDf['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+        singleFlyEntranceIndexList_TheWindSide_P01 = [item[0] for item in singleFlyEntranceData_TheWindSide_P01 if item]
 
-if groupsToPlot == None:
-    counter = 0
-    ## for each group of flies (i.e, parent vs offspring), I'm going to plot 4 types of decision zone trajectories:
-    ## P01: entrance from wind and closed end, P10: entrance from wind and closed end
-    for group,data in df_grouped:
-        ## mean border and choice zone borders per group of flies
-        meanBorder_P01 = np.mean(np.asanyarray(data['Border|P01'].tolist()),axis=0)
-        meanBorder_P10 = np.mean(np.asanyarray(data['Border|P10'].tolist()),axis=0)
-        meanChoiceZoneBorders_P01 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P01'].tolist()),axis=0)
-        meanChoiceZoneBorders_P10 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P10'].tolist()),axis=0)
+        for index in singleFlyEntranceIndexList_TheWindSide_P01:
+            axs[counter+0].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
 
-        for fly in range(len(data)):
-            singleFlyDf = data.iloc[fly]
-            singleFlyHeadX = singleFlyDf['HeadX(pix)']
+        singleFlyEntranceData_TheClosedSide_P01 = singleFlyDf['FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+        singleFlyEntranceIndexList_TheClosedSide_P01 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P01 if item]
 
-            singleFlyEntranceData_TheWindSide_P01 = singleFlyDf['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
-            singleFlyEntranceIndexList_TheWindSide_P01 = [item[0] for item in singleFlyEntranceData_TheWindSide_P01 if item]
+        for index in singleFlyEntranceIndexList_TheClosedSide_P01:
+            axs[counter+numOfGroups].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
 
-            for index in singleFlyEntranceIndexList_TheWindSide_P01:
-                axs[counter+0].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
+        singleFlyEntranceData_TheWindSide_P10 = singleFlyDf['FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+        singleFlyEntranceIndexList_TheWindSide_P10 = [item[0] for item in singleFlyEntranceData_TheWindSide_P10 if item]
 
-            singleFlyEntranceData_TheClosedSide_P01 = singleFlyDf['FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
-            singleFlyEntranceIndexList_TheClosedSide_P01 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P01 if item]
+        for index in singleFlyEntranceIndexList_TheWindSide_P10:
+            axs[counter+2*numOfGroups].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
 
-            for index in singleFlyEntranceIndexList_TheClosedSide_P01:
-                axs[counter+3].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
+        singleFlyEntranceData_TheClosedSide_P10 = singleFlyDf['FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+        singleFlyEntranceIndexList_TheClosedSide_P10 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P10 if item]
 
-            singleFlyEntranceData_TheWindSide_P10 = singleFlyDf['FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
-            singleFlyEntranceIndexList_TheWindSide_P10 = [item[0] for item in singleFlyEntranceData_TheWindSide_P10 if item]
+        for index in singleFlyEntranceIndexList_TheClosedSide_P10:
+            axs[counter+3*numOfGroups].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
 
-            for index in singleFlyEntranceIndexList_TheWindSide_P10:
-                axs[counter+6].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
+    fontdict = {'fontsize':12}
+    axs[counter+0].set_title('P01_from Wind End| %s' %(group),fontdict=fontdict)        
+    axs[counter+0].axhline(meanChoiceZoneBorders_P01[0],color='grey')        
+    axs[counter+0].axhline(meanChoiceZoneBorders_P01[1],color='grey')
+    axs[counter+0].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
+    axs[counter+0].set_ylim(30,110)
 
-            singleFlyEntranceData_TheClosedSide_P10 = singleFlyDf['FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
-            singleFlyEntranceIndexList_TheClosedSide_P10 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P10 if item]
+    axs[counter+numOfGroups].set_title('P01_from Closed End| %s' %(group),fontdict=fontdict)
+    axs[counter+numOfGroups].axhline(meanChoiceZoneBorders_P01[0],color='grey')
+    axs[counter+numOfGroups].axhline(meanChoiceZoneBorders_P01[1],color='grey') 
+    axs[counter+numOfGroups].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
+    axs[counter+numOfGroups].set_ylim(30,110)
 
-            for index in singleFlyEntranceIndexList_TheClosedSide_P10:
-                axs[counter+9].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
-        
-        fontdict = {'fontsize':8}
-        axs[counter+0].set_title('P01_from Wind End| %s' %(group),fontdict=fontdict)        
-        axs[counter+0].axhline(meanChoiceZoneBorders_P01[0],color='grey')        
-        axs[counter+0].axhline(meanChoiceZoneBorders_P01[1],color='grey')
-        axs[counter+0].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
-        axs[counter+0].set_ylim(30,110)
+    axs[counter+2*numOfGroups].set_title('P10_from Wind End| %s' %(group),fontdict=fontdict)
+    axs[counter+2*numOfGroups].axhline(meanChoiceZoneBorders_P10[0],color='grey')
+    axs[counter+2*numOfGroups].axhline(meanChoiceZoneBorders_P10[1],color='grey') 
+    axs[counter+2*numOfGroups].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
+    axs[counter+2*numOfGroups].set_ylim(30,110)
 
-        axs[counter+3].set_title('P01_from Closed End| %s' %(group),fontdict=fontdict)
-        axs[counter+3].axhline(meanChoiceZoneBorders_P01[0],color='grey')
-        axs[counter+3].axhline(meanChoiceZoneBorders_P01[1],color='grey') 
-        axs[counter+3].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
-        axs[counter+3].set_ylim(30,110)
+    axs[counter+3*numOfGroups].set_title('P10_from Closed End| %s' %(group),fontdict=fontdict)
+    axs[counter+3*numOfGroups].axhline(meanChoiceZoneBorders_P10[0],color='grey')
+    axs[counter+3*numOfGroups].axhline(meanChoiceZoneBorders_P10[1],color='grey')
+    axs[counter+3*numOfGroups].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
+    axs[counter+3*numOfGroups].set_ylim(30,110)
 
-        axs[counter+6].set_title('P10_from Wind End| %s' %(group),fontdict=fontdict)
-        axs[counter+6].axhline(meanChoiceZoneBorders_P10[0],color='grey')
-        axs[counter+6].axhline(meanChoiceZoneBorders_P10[1],color='grey') 
-        axs[counter+6].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
-        axs[counter+6].set_ylim(30,110)
+    return axs
 
-        axs[counter+9].set_title('P10_from Closed End| %s' %(group),fontdict=fontdict)
-        axs[counter+9].axhline(meanChoiceZoneBorders_P10[0],color='grey')
-        axs[counter+9].axhline(meanChoiceZoneBorders_P10[1],color='grey')
-        axs[counter+9].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
-        axs[counter+9].set_ylim(30,110)
-        
-        counter += 1
-        
-sns.set(style="ticks", palette="bright", color_codes=True)
-sns.despine()
+def VisualizeTheChoiceZoneTrajectories(df, groupBy, groupsToPlot = None, durationInframes = 50, 
+                                       mean = False, CI = 95, hspace = .3, wspace = .3):
+    
+    if groupsToPlot == None:    
+        df_grouped = df.groupby(groupBy)
+        numOfGroups = len(df_grouped)
+        figSize = (5*numOfGroups,20)
+        fig, axs = plt.subplots(4,numOfGroups, figsize=figSize, facecolor='w', edgecolor='k')
+        fig.subplots_adjust(hspace = hspace, wspace = wspace)
+        axs = axs.ravel()
 
-    #return fig, meanChoiceZoneBorders_P01[0]
+        counter = 0
+
+        ## for each group of flies (i.e, parent vs offspring), I'm going to plot 4 types of decision zone trajectories:
+        ## P01: entrance from wind and closed end, P10: entrance from wind and closed end
+        for group,data in df_grouped:
+            axs = VisualizeGroupsOfData(group,data,counter,numOfGroups,axs)
+            counter += 1
+
+    else:    
+        df_grouped = df.groupby(groupBy)
+        numOfGroups = len(groupsToPlot)
+        figSize = (5*numOfGroups,20)
+        fig, axs = plt.subplots(4,numOfGroups, figsize=figSize, facecolor='w', edgecolor='k')
+        fig.subplots_adjust(hspace = hspace, wspace = wspace)
+        axs = axs.ravel()  
+
+        counter = 0
+        for group in groupsToPlot:
+            data = df_grouped.get_group(group)
+            axs = VisualizeGroupsOfData(group,data,counter,numOfGroups,axs)
+            counter += 1
+
+    sns.set(style="ticks", palette="bright", color_codes=True)
+    sns.despine()
+
+    return fig
 
 
-# In[1020]:
+# In[1116]:
 
-f, b = VisualizeTheChoiceZoneTrajectories(dff, 'Status_Sex_Satiety_LightType_Intensity_Wind')
-b
+f = VisualizeTheChoiceZoneTrajectories(dff, 'Genotype', groupsToPlot=None)
 
 
-# In[1014]:
+# In[1096]:
 
-results
+len(dff.groupby('Status_Sex_Satiety_LightType_Intensity_Wind'))
+
+
+# In[1078]:
+
+df_grouped.get_group('Orco-Gal4-UAS-CsChrimson')
+
+
+# In[1074]:
+
+a = df_grouped.get_group('Orco-Gal4-UAS-CsChrimson','w1118-Orco-Gal4')
+
+
+# In[ ]:
+
+fo
 
 
 # In[1007]:
