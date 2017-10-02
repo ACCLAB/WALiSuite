@@ -3,7 +3,8 @@
 
 # ## Import libs
 
-# In[48]:
+# In[1]:
+
 
 import os
 import seaborn as sns
@@ -29,6 +30,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # In[487]:
 
+
 # TdmsFile > Groups > Channels > Data 
 f = TdmsFile("LOG_2017-04-17_17-21-29_w1118-UAS-CsChrimson_Male_14uW_Constant_NoAir_Fed.tdms")
 
@@ -37,6 +39,7 @@ f = TdmsFile("LOG_2017-04-17_17-21-29_w1118-UAS-CsChrimson_Male_14uW_Constant_No
 
 # In[489]:
 
+
 ## Print group names
 groupNames = f.groups()
 print 'Group Names:', groupNames
@@ -44,12 +47,14 @@ print 'Group Names:', groupNames
 
 # In[ ]:
 
+
 ## Print channel names of a particular group
 channelNames = f.group_channels('Tracker')
 print 'Trackers channels:', channelNames
 
 
 # In[490]:
+
 
 for group in groupNames:
     channelNames = f.group_channels(group)
@@ -60,6 +65,7 @@ for group in groupNames:
 # ## Access to the data alternative 1
 
 # In[ ]:
+
 
 ## Get the data from a channel
 Genotype = f.channel_data('ExperimentInfo','Genotype')
@@ -74,6 +80,7 @@ print 'Length of the cXmm data:', len(Tracking)
 
 # In[559]:
 
+
 ## Get the data from a channel 2
 channel = f.object('ExperimentLog','Frame timer (ms)')
 data = channel.data
@@ -83,11 +90,13 @@ len(data)
 
 # In[ ]:
 
+
 channel1 = f.object('Count','PatternState')
 data1 = channel1.data  
 
 
 # In[ ]:
+
 
 channel1 = f.object('Count','Timestamp')
 data1 = channel1.data 
@@ -96,6 +105,7 @@ data1 = channel1.data
 # ## Transfer the data into a Pandas df
 
 # In[ ]:
+
 
 ## Loading data into a Pandas Df
 df = f.as_dataframe()
@@ -107,21 +117,25 @@ df = f.as_dataframe()
 
 # In[491]:
 
+
 metaData = f.object().properties
 metaData
 
 
 # In[ ]:
 
+
 data1 = df["/\'Count\'/\'Obj1_cX\'"]
 
 
 # In[ ]:
 
+
 data3 = df["/'Tracker'/'HeadX_pix001'"]
 
 
 # In[ ]:
+
 
 #data1.isnull().sum()
 data1
@@ -129,21 +143,25 @@ data1
 
 # In[ ]:
 
+
 t = "/'Tracker'/'HeadX_pix001'"
 "/'Tracker'/'HeadX_pix001"
 
 
 # In[ ]:
 
+
 data2 = df[t]
 
 
 # In[ ]:
 
+
 patterns = df["/\'Count\'/\'PatternState'"]
 
 
 # In[ ]:
+
 
 pat01 = patterns[patterns == 'Pattern 01'].index
 pat10 = patterns[patterns == 'Pattern 10'].index
@@ -156,10 +174,12 @@ p10_max = max(pat10)
 
 # In[ ]:
 
+
 p01_min
 
 
 # In[ ]:
+
 
 pat01_first_light_exposure = min(df["/\'Count\'/\'Obj1_InLight'"][p01_min:p01_max][df["/\'Count\'/\'Obj1_InLight'"] == '1'].index) if not df["/\'Count\'/\'Obj1_InLight'"][p01_min:p01_max][df["/\'Count\'/\'Obj1_InLight'"] == '1'].empty else 0
 pat10_first_light_exposure = min(df["/\'Count\'/\'Obj1_InLight'"][p10_min:p10_max][df["/\'Count\'/\'Obj1_InLight'"] == '1'].index) if not df["/\'Count\'/\'Obj1_InLight'"][p10_min:p10_max][df["/\'Count\'/\'Obj1_InLight'"] == '1'].empty else 0
@@ -167,10 +187,12 @@ pat10_first_light_exposure = min(df["/\'Count\'/\'Obj1_InLight'"][p10_min:p10_ma
 
 # In[ ]:
 
+
 df
 
 
 # In[ ]:
+
 
 fig1 = plt.figure()
 ax1 = plt.subplot(111)
@@ -192,10 +214,12 @@ plt.show()
 
 # In[ ]:
 
+
 diff = [abs(float(x) - float(y)) for x, y in zip(data1, data3)]
 
 
 # In[ ]:
+
 
 df_pat01 = df[df["/\'Count\'/\'PatternState'"] == 'Pattern 01']    
 df_pat10 = df[df["/\'Count\'/\'PatternState'"] == 'Pattern 10'] 
@@ -203,10 +227,12 @@ df_pat10 = df[df["/\'Count\'/\'PatternState'"] == 'Pattern 10']
 
 # In[ ]:
 
+
 a = min(df_pat01.index),max(df_pat01.index)
 
 
 # In[ ]:
+
 
 ##Get the chunks where the light is ON   
 df_pat01 = df[df["/\'Count\'/\'PatternState'"] == 'Pattern 01']    
@@ -237,7 +263,8 @@ results = pd.DataFrame(temp)
 
 # ### Read all the tdms and corresponding pattern csv files in a directory into a pandas df
 
-# In[575]:
+# In[2]:
+
 
 def ReadExperimentData(directory):
     ## Generate a single dataframe from the .tdms and pattern files 
@@ -368,14 +395,16 @@ def ReadExperimentData(directory):
     return results, numOfTdmsFiles
 
 
-# In[592]:
+# In[3]:
+
 
 directory = "C:/Users/tumkayat/Desktop/CodeRep/WALiSAR/BehaviroalDataAnalyses/20170417_SmallerData"
 results, numOfUploadedTdmsFiles = ReadExperimentData(directory)
 numOfUploadedTdmsFiles
 
 
-# In[688]:
+# In[4]:
+
 
 results
 
@@ -385,6 +414,7 @@ results
 # ### Preference index after light contact
 
 # In[586]:
+
 
 def PreferenceIndexAfterLightContact(df):
     numberOfFlies = df.shape[0]
@@ -463,6 +493,7 @@ def MeanPreferenceIndexNoNANs(df):
 
 # In[594]:
 
+
 ## results is the original df that contains all the data, as well as individual preference index and the mean preference index 
 ## (In the PreferenceIndex_Mean, Nans are counted as not existing, i.e. P01 = 0.8, P10 = Nan, P_mean = 0.8)
 ## meanPreferenceIndexDF_noNan is the df, in which all the Nans in the preference index are dropped and mean preference index
@@ -473,6 +504,7 @@ results, PreferenceIndexDFDroppedNans = PreferenceIndexAfterLightContact(results
 # ### Plotting the Preference Index
 
 # In[595]:
+
 
 ## Prepare the dfs for Contrast plotting
 results = results.assign(Genotype_Sex_Satiety_LightType_Intensity_Wind = pd.Series(results['Genotype'] + '_' + results['Sex'] + '_' +
@@ -494,10 +526,12 @@ PreferenceIndexDFDroppedNans = PreferenceIndexDFDroppedNans.assign(Status_Sex_Sa
 
 # In[584]:
 
+
 results['Status_Sex_Satiety_LightType_Intensity_Wind'].unique()
 
 
 # In[454]:
+
 
 fig,b = bs.contrastplot(PreferenceIndexDFDroppedNans, x = 'Status_Sex_Satiety_LightType_Intensity_Wind', y = 'PreferenceIndex_Mean_noNan', color_col= 'Genotype',                      
                       idx = (('Parent_Female_Fed_Constant_14uW_Air', 'Offspring_Female_Fed_Constant_14uW_Air'),
@@ -513,10 +547,12 @@ b
 
 # In[585]:
 
+
 results
 
 
-# In[1016]:
+# In[142]:
+
 
 ## Function 1: Detect choice zone entrance indices, store them in the df
 ## Pass the df to these functions:
@@ -582,7 +618,7 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
             if (headXcoordIn_P01[i] < choiceZoneBorders_P01[0]) & (headXcoordIn_P01[i+1] > choiceZoneBorders_P01[0]):
                 
                 ## store the entrance info [entrance index, entrance coor]
-                temp = [i+1, headXcoordIn_P01[i+1]]
+                temp = [P01_startIndex+i+1, headXcoordIn_P01[i+1]]
                 
                 ## now detect the exit of this entrance
                 for j in range(len(headXcoordIn_P01[i:])-1):
@@ -590,7 +626,7 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
                     if (headXcoordIn_P01[i:][j+1] < choiceZoneBorders_P01[0]) | (headXcoordIn_P01[i:][j+1] > choiceZoneBorders_P01[1]):
 
                         ## attach the exit to the temp list [entrance index, entrance coor, exit index, exit coor]
-                        temp.append(i+j+1)
+                        temp.append(P01_startIndex+i+j+1)
                         temp.append(headXcoordIn_P01[i+j+1])
                         break
 
@@ -600,7 +636,7 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
             if (headXcoordIn_P01[i] > choiceZoneBorders_P01[1]) & (headXcoordIn_P01[i+1] < choiceZoneBorders_P01[1]):
 
                 ## store the entrance info [entrance index, entrance coor]
-                temp = [i+1, headXcoordIn_P01[i+1]]
+                temp = [P01_startIndex+i+1, headXcoordIn_P01[i+1]]
 
                 ## now detect the exit of this entrance, if any
                 for j in range(len(headXcoordIn_P01[i:])-1):
@@ -608,7 +644,7 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
                     if (headXcoordIn_P01[i:][j+1] < choiceZoneBorders_P01[0]) | (headXcoordIn_P01[i:][j+1] > choiceZoneBorders_P01[1]):
 
                         ## attach the exit to the temp list [entrance index, entrance coor, exit index, exit coor]
-                        temp.append(i+j+1)
+                        temp.append(P01_startIndex+i+j+1)
                         temp.append(headXcoordIn_P01[i+j+1])
                         break
                         
@@ -623,7 +659,7 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
             if (headXcoordIn_P10[i] < choiceZoneBorders_P10[0]) & (headXcoordIn_P10[i+1] > choiceZoneBorders_P10[0]):
                 
                 ## store the entrance info [entrance index, entrance coor]
-                temp = [i+1, headXcoordIn_P10[i+1]]
+                temp = [P10_startIndex+i+1, headXcoordIn_P10[i+1]]
                 
                 ## now detect the exit of this entrance
                 for j in range(len(headXcoordIn_P10[i:])-1):
@@ -631,7 +667,7 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
                     if (headXcoordIn_P10[i:][j+1] < choiceZoneBorders_P10[0]) | (headXcoordIn_P10[i:][j+1] > choiceZoneBorders_P10[1]):
 
                         ## attach the exit to the temp list [entrance index, entrance coor, exit index, exit coor]
-                        temp.append(i+j+1)
+                        temp.append(P10_startIndex+i+j+1)
                         temp.append(headXcoordIn_P10[i+j+1])
                         break
 
@@ -641,7 +677,7 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
             if (headXcoordIn_P10[i] > choiceZoneBorders_P10[1]) & (headXcoordIn_P10[i+1] < choiceZoneBorders_P10[1]):
 
                 ## store the entrance info [entrance index, entrance coor]
-                temp = [i+1, headXcoordIn_P10[i+1]]
+                temp = [P10_startIndex+i+1, headXcoordIn_P10[i+1]]
 
                 ## now detect the exit of this entrance, if any
                 for j in range(len(headXcoordIn_P10[i:])-1):
@@ -649,7 +685,7 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
                     if (headXcoordIn_P10[i:][j+1] < choiceZoneBorders_P10[0]) | (headXcoordIn_P10[i:][j+1] > choiceZoneBorders_P10[1]):
 
                         ## attach the exit to the temp lis, [entrance index, entrance coor, exit index, exit coor]
-                        temp.append(i+j+1)
+                        temp.append(P10_startIndex+i+j+1)
                         temp.append(headXcoordIn_P10[i+j+1])
                         break
                         
@@ -671,17 +707,20 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
     return df
 
 
-# In[1052]:
+# In[143]:
+
 
 dff = DetectEntraceandExitIndicesToTheChoiceZone(results)
 
 
-# In[1053]:
+# In[1119]:
 
-dff
+
+dff.groupby('Genotype').get_group('Orco-Gal4-UAS-CsChrimson')
 
 
 # In[814]:
+
 
 flyID = 2
 
@@ -697,180 +736,255 @@ border_P10 = dff.iloc[flyID]['Border|P10']
 
 # In[713]:
 
+
 headX_P01[668]
 
 
 # In[854]:
 
+
 df
 
 
-# In[1114]:
+# In[167]:
 
-def VisualizeGroupsOfData(group,data,counter,numOfGroups,axs):
+
+def VisualizeGroupsOfData(group,data,counter,numOfGroups,axs,singleFly,durationAfterEntrance_frames,ylim):
     
-    meanBorder_P01 = np.mean(np.asanyarray(data['Border|P01'].tolist()),axis=0)
-    meanBorder_P10 = np.mean(np.asanyarray(data['Border|P10'].tolist()),axis=0)
-    meanChoiceZoneBorders_P01 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P01'].tolist()),axis=0)
-    meanChoiceZoneBorders_P10 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P10'].tolist()),axis=0)
-    
-    for fly in range(len(data)):
-        singleFlyDf = data.iloc[fly]
-        singleFlyHeadX = singleFlyDf['HeadX(pix)']
+    if singleFly == None:
+        meanBorder_P01 = np.mean(np.asanyarray(data['Border|P01'].tolist()),axis=0)
+        meanBorder_P10 = np.mean(np.asanyarray(data['Border|P10'].tolist()),axis=0)
+        meanChoiceZoneBorders_P01 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P01'].tolist()),axis=0)
+        meanChoiceZoneBorders_P10 = np.mean(np.asanyarray(data['ChoiceZoneBordersperFly_P10'].tolist()),axis=0)
 
-        singleFlyEntranceData_TheWindSide_P01 = singleFlyDf['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
-        singleFlyEntranceIndexList_TheWindSide_P01 = [item[0] for item in singleFlyEntranceData_TheWindSide_P01 if item]
+        for fly in range(len(data)):
+            singleFlyDf = data.iloc[fly]
+            singleFlyHeadX = singleFlyDf['HeadX(pix)']
 
-        for index in singleFlyEntranceIndexList_TheWindSide_P01:
-            axs[counter+0].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
+            singleFlyEntranceData_TheWindSide_P01 = singleFlyDf['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheWindSide_P01 = [item[0] for item in singleFlyEntranceData_TheWindSide_P01 if item]
 
-        singleFlyEntranceData_TheClosedSide_P01 = singleFlyDf['FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
-        singleFlyEntranceIndexList_TheClosedSide_P01 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P01 if item]
+            for index in singleFlyEntranceIndexList_TheWindSide_P01:
+                axs[counter+0].plot(range(durationAfterEntrance_frames), singleFlyHeadX[index:index+durationAfterEntrance_frames], linewidth = .6, color='black')
 
-        for index in singleFlyEntranceIndexList_TheClosedSide_P01:
-            axs[counter+numOfGroups].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
+            singleFlyEntranceData_TheClosedSide_P01 = singleFlyDf['FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheClosedSide_P01 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P01 if item]
 
-        singleFlyEntranceData_TheWindSide_P10 = singleFlyDf['FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
-        singleFlyEntranceIndexList_TheWindSide_P10 = [item[0] for item in singleFlyEntranceData_TheWindSide_P10 if item]
+            for index in singleFlyEntranceIndexList_TheClosedSide_P01:
+                axs[counter+numOfGroups].plot(range(durationAfterEntrance_frames), singleFlyHeadX[index:index+durationAfterEntrance_frames], linewidth = .6, color='black')
 
-        for index in singleFlyEntranceIndexList_TheWindSide_P10:
-            axs[counter+2*numOfGroups].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
+            singleFlyEntranceData_TheWindSide_P10 = singleFlyDf['FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheWindSide_P10 = [item[0] for item in singleFlyEntranceData_TheWindSide_P10 if item]
 
-        singleFlyEntranceData_TheClosedSide_P10 = singleFlyDf['FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
-        singleFlyEntranceIndexList_TheClosedSide_P10 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P10 if item]
+            for index in singleFlyEntranceIndexList_TheWindSide_P10:
+                axs[counter+2*numOfGroups].plot(range(durationAfterEntrance_frames), singleFlyHeadX[index:index+durationAfterEntrance_frames], linewidth = .6, color='black')
 
-        for index in singleFlyEntranceIndexList_TheClosedSide_P10:
-            axs[counter+3*numOfGroups].plot(range(durationInframes), singleFlyHeadX[index:index+durationInframes], linewidth = .6, color='black')
+            singleFlyEntranceData_TheClosedSide_P10 = singleFlyDf['FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheClosedSide_P10 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P10 if item]
 
-    fontdict = {'fontsize':12}
-    axs[counter+0].set_title('P01_from Wind End| %s' %(group),fontdict=fontdict)        
-    axs[counter+0].axhline(meanChoiceZoneBorders_P01[0],color='grey')        
-    axs[counter+0].axhline(meanChoiceZoneBorders_P01[1],color='grey')
-    axs[counter+0].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
-    axs[counter+0].set_ylim(30,110)
+            for index in singleFlyEntranceIndexList_TheClosedSide_P10:
+                axs[counter+3*numOfGroups].plot(range(durationAfterEntrance_frames), singleFlyHeadX[index:index+durationAfterEntrance_frames], linewidth = .6, color='black')
 
-    axs[counter+numOfGroups].set_title('P01_from Closed End| %s' %(group),fontdict=fontdict)
-    axs[counter+numOfGroups].axhline(meanChoiceZoneBorders_P01[0],color='grey')
-    axs[counter+numOfGroups].axhline(meanChoiceZoneBorders_P01[1],color='grey') 
-    axs[counter+numOfGroups].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
-    axs[counter+numOfGroups].set_ylim(30,110)
+        fontdict = {'fontsize':12}
+        axs[counter+0].set_title('P01_from Wind End| %s' %(group),fontdict=fontdict)        
+        axs[counter+0].axhline(meanChoiceZoneBorders_P01[0],color='grey')        
+        axs[counter+0].axhline(meanChoiceZoneBorders_P01[1],color='grey')
+        axs[counter+0].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
+        axs[counter+0].set_ylim(ylim[0],ylim[1])
 
-    axs[counter+2*numOfGroups].set_title('P10_from Wind End| %s' %(group),fontdict=fontdict)
-    axs[counter+2*numOfGroups].axhline(meanChoiceZoneBorders_P10[0],color='grey')
-    axs[counter+2*numOfGroups].axhline(meanChoiceZoneBorders_P10[1],color='grey') 
-    axs[counter+2*numOfGroups].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
-    axs[counter+2*numOfGroups].set_ylim(30,110)
+        axs[counter+numOfGroups].set_title('P01_from Closed End| %s' %(group),fontdict=fontdict)
+        axs[counter+numOfGroups].axhline(meanChoiceZoneBorders_P01[0],color='grey')
+        axs[counter+numOfGroups].axhline(meanChoiceZoneBorders_P01[1],color='grey') 
+        axs[counter+numOfGroups].axhspan(meanBorder_P01,145,color='red',alpha = 0.3)
+        axs[counter+numOfGroups].set_ylim(ylim[0],ylim[1])
 
-    axs[counter+3*numOfGroups].set_title('P10_from Closed End| %s' %(group),fontdict=fontdict)
-    axs[counter+3*numOfGroups].axhline(meanChoiceZoneBorders_P10[0],color='grey')
-    axs[counter+3*numOfGroups].axhline(meanChoiceZoneBorders_P10[1],color='grey')
-    axs[counter+3*numOfGroups].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
-    axs[counter+3*numOfGroups].set_ylim(30,110)
+        axs[counter+2*numOfGroups].set_title('P10_from Wind End| %s' %(group),fontdict=fontdict)
+        axs[counter+2*numOfGroups].axhline(meanChoiceZoneBorders_P10[0],color='grey')
+        axs[counter+2*numOfGroups].axhline(meanChoiceZoneBorders_P10[1],color='grey') 
+        axs[counter+2*numOfGroups].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
+        axs[counter+2*numOfGroups].set_ylim(ylim[0],ylim[1])
 
+        axs[counter+3*numOfGroups].set_title('P10_from Closed End| %s' %(group),fontdict=fontdict)
+        axs[counter+3*numOfGroups].axhline(meanChoiceZoneBorders_P10[0],color='grey')
+        axs[counter+3*numOfGroups].axhline(meanChoiceZoneBorders_P10[1],color='grey')
+        axs[counter+3*numOfGroups].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
+        axs[counter+3*numOfGroups].set_ylim(ylim[0],ylim[1])
+        
+    elif singleFly != None:
+        
+        counter = 0
+        numOfflies = singleFly[1] - singleFly[0]
+        for fly in range(numOfflies):   
+            
+            singleFlyDf = data.iloc[fly-1]
+            singleFlyHeadX = singleFlyDf['HeadX(pix)']
+            genotype = singleFlyDf['Genotype']
+            flyID = singleFlyDf['Fly ID']
+            
+            Border_P01 = singleFlyDf['Border|P01']
+            Border_P10 = singleFlyDf['Border|P10']
+            ChoiceZoneBorders_P01 = singleFlyDf['ChoiceZoneBordersperFly_P01']
+            ChoiceZoneBorders_P10 = singleFlyDf['ChoiceZoneBordersperFly_P10']
+        
+            singleFlyEntranceData_TheWindSide_P01 = singleFlyDf['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheWindSide_P01 = [item[0] for item in singleFlyEntranceData_TheWindSide_P01 if item]
+            
+            linewidth = 1 + 0.8*(numOfflies-1)
+            for index in singleFlyEntranceIndexList_TheWindSide_P01:
+                axs[counter*4+0].plot(range(durationAfterEntrance_frames), singleFlyHeadX[index:index+durationAfterEntrance_frames], linewidth = linewidth, color='black')
+
+            singleFlyEntranceData_TheClosedSide_P01 = singleFlyDf['FromTheClosedEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheClosedSide_P01 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P01 if item]
+
+            for index in singleFlyEntranceIndexList_TheClosedSide_P01:
+                axs[counter*4+1].plot(range(durationAfterEntrance_frames), singleFlyHeadX[index:index+durationAfterEntrance_frames], linewidth = linewidth, color='black')
+
+            singleFlyEntranceData_TheWindSide_P10 = singleFlyDf['FromTheWindPortEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheWindSide_P10 = [item[0] for item in singleFlyEntranceData_TheWindSide_P10 if item]
+
+            for index in singleFlyEntranceIndexList_TheWindSide_P10:
+                axs[counter*4+2].plot(range(durationAfterEntrance_frames), singleFlyHeadX[index:index+durationAfterEntrance_frames], linewidth = linewidth, color='black')
+
+            singleFlyEntranceData_TheClosedSide_P10 = singleFlyDf['FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+            singleFlyEntranceIndexList_TheClosedSide_P10 = [item[0] for item in singleFlyEntranceData_TheClosedSide_P10 if item]
+
+            for index in singleFlyEntranceIndexList_TheClosedSide_P10:
+                axs[counter*4+3].plot(range(durationAfterEntrance_frames), singleFlyHeadX[index:index+durationAfterEntrance_frames], linewidth = linewidth, color='black')
+
+            fontdict = {'fontsize':12*(numOfGroups/1.2)}
+            axs[counter*4+0].set_title('%s, ID: %s|P01_from Wind End' %(genotype,flyID),fontdict=fontdict)        
+            axs[counter*4+0].axhline(ChoiceZoneBorders_P01[0],color='grey')        
+            axs[counter*4+0].axhline(ChoiceZoneBorders_P01[1],color='grey')
+            axs[counter*4+0].axhspan(Border_P01,145,color='red',alpha = 0.3)
+            axs[counter*4+0].set_ylim(ylim[0],ylim[1])
+
+            axs[counter*4+1].set_title('P01_from Closed End',fontdict=fontdict)
+            axs[counter*4+1].axhline(ChoiceZoneBorders_P01[0],color='grey')
+            axs[counter*4+1].axhline(ChoiceZoneBorders_P01[1],color='grey') 
+            axs[counter*4+1].axhspan(Border_P01,145,color='red',alpha = 0.3)
+            axs[counter*4+1].set_ylim(ylim[0],ylim[1])
+
+            axs[counter*4+2].set_title('P10_from Wind End',fontdict=fontdict)
+            axs[counter*4+2].axhline(ChoiceZoneBorders_P10[0],color='grey')
+            axs[counter*4+2].axhline(ChoiceZoneBorders_P10[1],color='grey') 
+            axs[counter*4+2].axhspan(0,Border_P10,color='red',alpha = 0.3)
+            axs[counter*4+2].set_ylim(ylim[0],ylim[1])
+
+            axs[counter*4+3].set_title('P10_from Closed End',fontdict=fontdict)
+            axs[counter*4+3].axhline(ChoiceZoneBorders_P10[0],color='grey')
+            axs[counter*4+3].axhline(ChoiceZoneBorders_P10[1],color='grey')
+            axs[counter*4+3].axhspan(0,Border_P10,color='red',alpha = 0.3)
+            axs[counter*4+3].set_ylim(ylim[0],ylim[1])
+            
+            counter += 1
+            
     return axs
 
-def VisualizeTheChoiceZoneTrajectories(df, groupBy, groupsToPlot = None, durationInframes = 50, 
-                                       mean = False, CI = 95, hspace = .3, wspace = .3):
+def VisualizeTheChoiceZoneTrajectories(df, singleFly = None, groupBy = None, groupsToPlot = None, durationAfterEntrance_frames=50, 
+                                       mean = False, CI = 95, hspace = .3, wspace = .3, ylim = [30,110]):
+   
+    if singleFly == None:
+        if groupsToPlot == None:    
+            df_grouped = df.groupby(groupBy)
+            numOfGroups = len(df_grouped)
+            figSize = (5*numOfGroups,20)
+            fig, axs = plt.subplots(4,numOfGroups, figsize=figSize, facecolor='w', edgecolor='k')
+            fig.subplots_adjust(hspace = hspace, wspace = wspace)
+            axs = axs.ravel()
+
+            counter = 0
+
+            ## for each group of flies (i.e, parent vs offspring), I'm going to plot 4 types of decision zone trajectories:
+            ## P01: entrance from wind and closed end, P10: entrance from wind and closed end
+            for group,data in df_grouped:
+                axs = VisualizeGroupsOfData(group,data,counter,numOfGroups,axs,singleFly,durationAfterEntrance_frames,ylim)
+                counter += 1
+
+        else:    
+            df_grouped = df.groupby(groupBy)
+            numOfGroups = len(groupsToPlot)
+            figSize = (5*numOfGroups,20)
+            fig, axs = plt.subplots(4,numOfGroups, figsize=figSize, facecolor='w', edgecolor='k')
+            fig.subplots_adjust(hspace = hspace, wspace = wspace)
+            axs = axs.ravel()  
+
+            counter = 0
+            for group in groupsToPlot:
+                data = df_grouped.get_group(group)
+                axs = VisualizeGroupsOfData(group,data,counter,numOfGroups,axs,singleFly,durationAfterEntrance_frames,ylim)
+                counter += 1
     
-    if groupsToPlot == None:    
-        df_grouped = df.groupby(groupBy)
-        numOfGroups = len(df_grouped)
-        figSize = (5*numOfGroups,20)
-        fig, axs = plt.subplots(4,numOfGroups, figsize=figSize, facecolor='w', edgecolor='k')
+    elif singleFly != None:
+        group = None
+        counter = None
+        fliesFrom = singleFly[0]
+        fliesTo = singleFly[1]
+        
+        numOfGroups = fliesTo - fliesFrom
+        figSize = (12*numOfGroups,4*numOfGroups**2)
+        fig, axs = plt.subplots(numOfGroups,4, figsize=figSize, facecolor='w', edgecolor='k')
         fig.subplots_adjust(hspace = hspace, wspace = wspace)
-        axs = axs.ravel()
-
-        counter = 0
-
-        ## for each group of flies (i.e, parent vs offspring), I'm going to plot 4 types of decision zone trajectories:
-        ## P01: entrance from wind and closed end, P10: entrance from wind and closed end
-        for group,data in df_grouped:
-            axs = VisualizeGroupsOfData(group,data,counter,numOfGroups,axs)
-            counter += 1
-
-    else:    
-        df_grouped = df.groupby(groupBy)
-        numOfGroups = len(groupsToPlot)
-        figSize = (5*numOfGroups,20)
-        fig, axs = plt.subplots(4,numOfGroups, figsize=figSize, facecolor='w', edgecolor='k')
-        fig.subplots_adjust(hspace = hspace, wspace = wspace)
-        axs = axs.ravel()  
-
-        counter = 0
-        for group in groupsToPlot:
-            data = df_grouped.get_group(group)
-            axs = VisualizeGroupsOfData(group,data,counter,numOfGroups,axs)
-            counter += 1
-
+        axs = axs.ravel() 
+        
+        axs = VisualizeGroupsOfData(group,df,counter,numOfGroups,axs,singleFly,durationAfterEntrance_frames,ylim)
+        
     sns.set(style="ticks", palette="bright", color_codes=True)
     sns.despine()
 
     return fig
 
 
-# In[1116]:
-
-f = VisualizeTheChoiceZoneTrajectories(dff, 'Genotype', groupsToPlot=None)
+# In[172]:
 
 
-# In[1096]:
-
-len(dff.groupby('Status_Sex_Satiety_LightType_Intensity_Wind'))
-
-
-# In[1078]:
-
-df_grouped.get_group('Orco-Gal4-UAS-CsChrimson')
+f = VisualizeTheChoiceZoneTrajectories(dff, singleFly = None, groupBy = None, groupsToPlot=None,
+                                       durationAfterEntrance_frames = 100, ylim = [0,150])
+f
 
 
-# In[1074]:
-
-a = df_grouped.get_group('Orco-Gal4-UAS-CsChrimson','w1118-Orco-Gal4')
+# In[173]:
 
 
-# In[ ]:
-
-fo
+plt.savefig('ChoiceZone_byGenotype.pdf',dpi=1000,bbox_inches='tight')
 
 
-# In[1007]:
+# In[127]:
+
 
 fig = plt.figure(figsize=(10,6))
 
-ax1 = fig.add_subplot(4,3,1)
-ax2 = fig.add_subplot(4,3,2)
-ax3 = fig.add_subplot(433)
-ax4 = fig.add_subplot(4,3,11)
+ax1 = fig.add_subplot(1,1,1)
 
-i = 50
-ax1.plot(range(50), headX_P01[i:i+50],color='black')
-ax1.axhline(choiceZone_P01[0], color='grey')
-ax1.axhline(choiceZone_P01[1], color='grey')
+headX_P01 = dff.iloc[12]['HeadX(pix)']
+#choiceZone_P01 = dff.iloc[12]['HeadX(pix)']
 
-i = 150
-ax2.plot(range(50), headX_P01[i:i+50],color='black')
-ax2.axhline(choiceZone_P01[0], color='grey')
-ax2.axhline(choiceZone_P01[1], color='grey')
-
-i = 250
-ax3.plot(range(50), headX_P01[i:i+50],color='black')
-ax3.axhline(choiceZone_P01[0], color='grey')
-ax3.axhline(choiceZone_P01[1], color='grey')
-
-i = 250
-ax4.plot(range(50), headX_P01[i:i+50],color='black')
-ax4.axhline(choiceZone_P01[0], color='grey')
-ax4.axhline(choiceZone_P01[1], color='grey')
-ax4.set_title('shashahsa')
-plt.tight_layout(w_pad=10)
+#i = 50
+ax1.plot(range(len(headX_P01)), headX_P01,color='black')
+# ax1.axhline(choiceZone_P01[0], color='grey')
+# ax1.axhline(choiceZone_P01[1], color='grey')
+fig
 
 
-# In[862]:
+# In[129]:
 
-df = dff.groupby('Genotype_Sex_Satiety_LightType_Intensity_Wind')
+
+dff.iloc[12]['FromTheClosedEnd_P10_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX']
+
+
+# In[139]:
+
+
+dff.iloc[12]['HeadX(pix)'][1773]
+
+
+# In[137]:
+
+
+a[0]
 
 
 # In[1005]:
+
 
 fig, axs = plt.subplots(4,3, figsize=(8, 6), facecolor='w', edgecolor='k')
 fig.subplots_adjust(hspace = .5, wspace=.5)
@@ -879,16 +993,19 @@ axs = axs.ravel()
 
 # In[970]:
 
+
 a
 
 
 # In[828]:
+
 
 entryIndexList = [dff.iloc[flyID]['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX'][0][0],
                   dff.iloc[flyID]['FromTheWindPortEnd_P01_EnterIdx_ExitIdx_EnterHeadX_ExitHeadX'][1][0]]
 
 
 # In[838]:
+
 
 ## Plot only around the decisions
 fig = plt.figure(figsize=(3,5))
@@ -908,6 +1025,7 @@ for i in entryIndexList:
 
 # In[816]:
 
+
 # P10
 
 sns.set(style="ticks", palette="bright", color_codes=True)
@@ -923,22 +1041,27 @@ sns.despine()
 
 
 
+
 # In[788]:
+
 
 decisions
 
 
 # In[748]:
 
+
 headX_P01[667:][8]
 
 
 # In[791]:
 
+
 headX_P01[677]
 
 
 # In[717]:
+
 
 choiceZone_P01
 
@@ -948,9 +1071,11 @@ choiceZone_P01
 
 
 
+
 # ### Fractional time in the odorized zone
 
 # In[ ]:
+
 
 def FractionalTimeinTheOdorizedZone(df):
     
@@ -959,6 +1084,7 @@ def FractionalTimeinTheOdorizedZone(df):
 
 
 # In[ ]:
+
 
 ## Plotting first time contacts of the flies in a given experiment
 
@@ -1001,12 +1127,14 @@ print 'Never seen the light (Pat01) =',no_contact_w_light_pat01, 'Never seen the
 
 # In[ ]:
 
+
 results
 
 
 # ### Set your data folder 
 
 # In[ ]:
+
 
 folder = "C:/Users/tumkayat/Desktop/ORScreening/OSAR/Orco-ACR1-Male-starved/"
 os.chdir(folder)
@@ -1016,6 +1144,7 @@ os.chdir(folder)
 
 # In[ ]:
 
+
 dataFiles = os.listdir(folder)
 len(dataFiles)
 
@@ -1024,12 +1153,14 @@ len(dataFiles)
 
 # In[ ]:
 
+
 lastXseconds = 30
 
 
 # ### Run this cell to do the analysis
 
 # In[ ]:
+
 
 def calculatePI(data):
     numofTimePoints = len(data)
@@ -1121,12 +1252,14 @@ results = pd.DataFrame(temp, columns=['FileName','Pattern', 'FileName_pattern', 
 
 # In[ ]:
 
+
 results
 
 
 # ### To plot the half PIs instead of Single Fly PI, run this cell. Otherwise NOT neccessary.
 
 # In[ ]:
+
 
 halfPI = results.drop_duplicates('FileName_pattern')
 halfPI = halfPI.drop('SingleFlyPI',1)
@@ -1135,6 +1268,7 @@ halfPI = halfPI.drop('SingleFlyPI',1)
 # ### Can see which genotypes there are in the analysis, and assign color to them for the plots
 
 # In[ ]:
+
 
 print results['Genotype'].unique()
 myPal = {#results['Genotype'].unique()[0] : 'cyan',
@@ -1146,10 +1280,12 @@ myPal = {#results['Genotype'].unique()[0] : 'cyan',
 
 # In[ ]:
 
+
 results['Status_LightType_Intensity_Wind'].unique()
 
 
 # In[ ]:
+
 
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -1186,6 +1322,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 # ### Constant Light - No Wind - Upwind and Downwind combined - Last 15 sec
 
 # In[ ]:
+
 
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -1224,6 +1361,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 # ### Constant Light - No Wind - UpWind - Last 15 sec
 
 # In[ ]:
+
 
 fig, contrastHalfPI = bs.contrastplot(data = upWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -1265,6 +1403,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # In[ ]:
 
+
 fig, contrastHalfPI = bs.contrastplot(data = downWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
                                  idx = (('Parent_Constant_14uW_NoAir','Offspring_Constant_14uW_NoAir'),
@@ -1305,6 +1444,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # In[ ]:
 
+
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
                                  idx = (('Parent_Constant_14uW_Air','Offspring_Constant_14uW_Air'),
@@ -1341,6 +1481,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # In[ ]:
 
+
 fig, contrastHalfPI = bs.contrastplot(data = upWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
                                  idx = (('Parent_Constant_14uW_Air','Offspring_Constant_14uW_Air'),
@@ -1376,6 +1517,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 # ### Constant Light - Wind - Downwind - Last 15 sec
 
 # In[ ]:
+
 
 fig, contrastHalfPI = bs.contrastplot(data = downWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -1415,6 +1557,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # In[ ]:
 
+
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
                                  idx = (('Parent_Constant_14uW_NoAir','Offspring_Constant_14uW_NoAir'),
@@ -1450,6 +1593,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 # ### Constant Light - No Wind (Downwind half) Last 30 sec
 
 # In[ ]:
+
 
 fig, contrastHalfPI = bs.contrastplot(data = downWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -1487,6 +1631,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # In[ ]:
 
+
 fig, contrastHalfPI = bs.contrastplot(data = upWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
                                  idx = (('Parent_Constant_14uW_NoAir','Offspring_Constant_14uW_NoAir'),
@@ -1522,6 +1667,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 # ### Constant Light - Wind (Downwind and Upwind) Last 30 sec
 
 # In[ ]:
+
 
 fig, contrastHalfPI = bs.contrastplot(data = results, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
@@ -1563,6 +1709,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # In[ ]:
 
+
 fig, contrastHalfPI = bs.contrastplot(data = downWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
                                  idx = (('Parent_Constant_14uW_Air','Offspring_Constant_14uW_Air'),
@@ -1603,6 +1750,7 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # In[ ]:
 
+
 fig, contrastHalfPI = bs.contrastplot(data = upWind, 
                                 x = 'Status_LightType_Intensity_Wind', y = 'SingleFlyPI', hue = 'Genotype',
                                  idx = (('Parent_Constant_14uW_Air','Offspring_Constant_14uW_Air'),
@@ -1641,10 +1789,6 @@ contrastHalfPI.to_csv(str(title) +'.csv')
 
 # In[ ]:
 
+
 os.close()
-
-
-# In[ ]:
-
-
 
