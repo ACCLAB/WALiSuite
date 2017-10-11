@@ -1,2 +1,2 @@
 # WALiSuite
-Data analysis suite for WALiSAR data
+A data analysis suite for WALiSAR data
