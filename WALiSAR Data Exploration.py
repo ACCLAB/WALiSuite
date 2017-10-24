@@ -21,18 +21,10 @@ from operator import itemgetter
 import matplotlib as mpl
 import bootstrap_contrast as bs
 from nptdms import *
+import math
 #pd.set_option('display.max_colwidth', 50)
 #pd.set_option('display.max_rows', 60)
 mpl.rcParams['pdf.fonttype'] = 42
-
-
-# ## Read tdms files
-
-# In[ ]:
-
-
-# TdmsFile > Groups > Channels > Data 
-f = TdmsFile("LOG_2017-04-17_17-21-29_w1118-UAS-CsChrimson_Male_14uW_Constant_NoAir_Fed.tdms")
 
 
 # ## Inspect the file
@@ -69,11 +61,11 @@ for group in groupNames:
 
 ## Get the data from a channel
 Genotype = f.channel_data('ExperimentInfo','Genotype')
-Tracking = f.channel_data('Tracker','Untitled 1')
+#Tracking = f.channel_data('Tracker','Untitled 1')
 
 print 'Genotype:', Genotype
-print 'Tracker(cXmm001):', Tracking
-print 'Length of the cXmm data:', len(Tracking)
+# print 'Tracker(cXmm001):', Tracking
+# print 'Length of the cXmm data:', len(Tracking)
 
 
 # ## Access to the data alternative 2
@@ -109,8 +101,8 @@ data1 = channel1.data
 
 ## Loading data into a Pandas Df
 df = f.as_dataframe()
-#df
-#df.to_csv('tdmsfile2.csv')
+df
+# df.to_csv('tdmsfileee.csv')
 
 
 # ## Get the light ON/OFF information
@@ -125,7 +117,8 @@ metaData
 # In[ ]:
 
 
-data1 = df["/\'Count\'/\'Obj1_cX\'"]
+data1 = df["/\'Count\'/\'Obj2_cX\'"]
+data1
 
 
 # In[ ]:
@@ -266,12 +259,27 @@ results = pd.DataFrame(temp)
 # In[2]:
 
 
+## The InLight col we have in the count csv files and count tab in the tdms file is based on cX data. Meaning that we're doing
+## head tracking but not using in the PI calculation.
+## Here, I wrote a function to generate InLight column for a given HeadX coordinates and respective borders.
+## I send only the headX while light ON (pattern01 or pattern10) to this function and return a binary list.
+def InLightDetection(data,minimumBorder,maximumBorder):
+    InLightBasedOnHeadXcoords = []
+    
+    for i in range(len(data)):
+        if minimumBorder <= data[i] <= maximumBorder:
+            InLightBasedOnHeadXcoords.append(1)
+            
+        else:
+            InLightBasedOnHeadXcoords.append(0)
+    return InLightBasedOnHeadXcoords
+
 def ReadExperimentData(directory):
     ## Generate a single dataframe from the .tdms and pattern files 
     temp = {'Tdms file name':[],'Date':[],'Time':[],'mmPerPix':[],'Light type':[],'Light Intensity(uW/mm2)':[],'Wind status':[],
             'Satiety':[],'Genotype':[],'Sex':[],'Status':[],'Fly ID':[],'cX(pix)':[],'HeadX(pix)':[],'HeadY(pix)':[],
-            'InLight':[],'First light contact index|P01':[],'First light contact index|P10':[],'LightON index|P01':[],
-            'LightON index|P10':[],'Border|P01':[],'Border|P10':[]}
+            'InLight':[],'InLight_HeadX|P01':[],'InLight_HeadX|P10':[],'First light contact index_of_the_whole_data|P01':[],'First light contact index_of_the_whole_data|P10':[],
+            'LightON index|P01':[],'First light contact index in P01':[],'First light contact index in P10':[],'LightON index|P10':[],'Border|P01':[],'Border|P10':[]}
 
     ## Change directory and get a list of the files in there 
     os.chdir(directory)
@@ -303,7 +311,8 @@ def ReadExperimentData(directory):
             date = tdmsNameNoExtension[1]
             time = tdmsNameNoExtension[2]
             genotype = tdmsNameNoExtension[3]
-            sex = tdmsNameNoExtension[4]
+#             sex = tdmsNameNoExtension[4]
+            sex = 'male'
             intensity = tdmsNameNoExtension[5]
             lightType = tdmsNameNoExtension[6]
             windState = tdmsNameNoExtension[7]
@@ -319,9 +328,9 @@ def ReadExperimentData(directory):
             elif (('Gal4' in genotype) | ('GAL4' in genotype)) & ('UAS' in genotype):
                 status = 'Offspring'
             else:
-                status = 'Unknown: check your genotype names'
+                status = 'Unknown: check your genotype labels'
             
-            ## simple putting fly IDs as numbers does not work due to missing chambers (i.e 3,4,..6,7)
+            ## simply putting fly IDs as numbers does not work due to missing chambers (i.e 3,4,6,7)
             ## thus, get a list of column names with fly IDs
             listOfFlyIDs = TDMSdf.columns[TDMSdf.columns.str.contains("/'Tracker'/'HeadX_pix")]
 
@@ -357,18 +366,42 @@ def ReadExperimentData(directory):
                 flyIndex = int(fly[-4:-1])
                 
                 ## format the fly index into 3 digits number,i.e '5' >> '005' 
-                #flyID = format(str(flyIndex).zfill(3))
+                flyID = format(str(flyIndex).zfill(3))
                 
                 ## generate column names for the data need to be pulled from the df
-                fly_inLight_ID = "/\'Count\'/\'Obj%s_InLight'" % flyIndex
-
-                ## find the index where the fly first contacted with light in each pattern
-                P01_first_light_contact = TDMSdf_pat01.index[TDMSdf_pat01[fly_inLight_ID] == '1'][0] if not TDMSdf_pat01.index[TDMSdf_pat01[fly_inLight_ID] == '1'].empty else None 
-                P10_first_light_contact = TDMSdf_pat10.index[TDMSdf_pat10[fly_inLight_ID] == '1'][0] if not TDMSdf_pat10.index[TDMSdf_pat10[fly_inLight_ID] == '1'].empty else None 
-
+                fly_headX_pix_ID = "/'Tracker'/'HeadX_pix" + str(flyID) + "'"
+                border_P01 = P01_df.filter(regex='pix').iloc[1].values[flyIndex-1]
+                border_P10 = P10_df.filter(regex='pix').iloc[1].values[flyIndex-1]
+            
+                ## get the headX coordinates of the fly where the light was ON - pattern01 or pattern10
+                headXcoord_P01 = TDMSdf_pat01[fly_headX_pix_ID].values.astype(float)
+                headXcoord_P10 = TDMSdf_pat10[fly_headX_pix_ID].values.astype(float)
+                         
+                ## send this data to the function along with the respective border info to get a binary list,
+                ## indicating whether the fly was in the light or not.
+                InLightBasedOnHeadX_P01 = InLightDetection(headXcoord_P01,border_P01,146)
+                InLightBasedOnHeadX_P10 = InLightDetection(headXcoord_P10,0,border_P10)
+                
+                ## if the fly had ever been in the light, get the first time she did.
+                if 1 in InLightBasedOnHeadX_P01:
+                    P01_first_light_contact_index_of_the_whole_data = int(LightOnP01[0]) + int(InLightBasedOnHeadX_P01.index(1))
+                    P01_first_light_contact_index_in_the_event = int(InLightBasedOnHeadX_P01.index(1))
+                else:
+                    P01_first_light_contact_index_of_the_whole_data = None
+                    P01_first_light_contact_index_in_the_event = None
+                   
+                if 1 in InLightBasedOnHeadX_P10:
+                    P10_first_light_contact_index_of_the_whole_data = int(LightOnP10[0]) + int(InLightBasedOnHeadX_P10.index(1))
+                    P10_first_light_contact_index_in_the_event = int(InLightBasedOnHeadX_P10.index(1))
+                else:
+                    P10_first_light_contact_index_of_the_whole_data = None
+                    P10_first_light_contact_index_in_the_event = None
+                    
                 ## append the info to temp dict
-                temp['First light contact index|P01'].append(P01_first_light_contact)
-                temp['First light contact index|P10'].append(P10_first_light_contact)  
+                temp['First light contact index_of_the_whole_data|P01'].append(P01_first_light_contact_index_of_the_whole_data)
+                temp['First light contact index_of_the_whole_data|P10'].append(P10_first_light_contact_index_of_the_whole_data)  
+                temp['First light contact index in P01'].append(P01_first_light_contact_index_in_the_event)
+                temp['First light contact index in P10'].append(P10_first_light_contact_index_in_the_event)
                 temp['Tdms file name'].append(fname)
                 temp['Date'].append(date)
                 temp['Time'].append(time)
@@ -382,14 +415,16 @@ def ReadExperimentData(directory):
                 temp['Status'].append(status)
                 temp['LightON index|P01'].append(LightOnP01)
                 temp['LightON index|P10'].append(LightOnP10)
-                temp['Border|P01'].append(P01_df.filter(regex='pix').iloc[1].values[flyIndex-1])
-                temp['Border|P10'].append(P10_df.filter(regex='pix').iloc[1].values[flyIndex-1])
+                temp['Border|P01'].append(border_P01)
+                temp['Border|P10'].append(border_P10)
+                temp['InLight_HeadX|P01'].append(InLightBasedOnHeadX_P01)
+                temp['InLight_HeadX|P10'].append(InLightBasedOnHeadX_P10)
 
     ## Convert temp into a df
     colOrder = ['Tdms file name','Date','Time','mmPerPix','Light type','Light Intensity(uW/mm2)','Wind status',
                 'Satiety','Genotype','Sex','Status','Fly ID','cX(pix)','HeadX(pix)','HeadY(pix)',
-                'InLight','First light contact index|P01','First light contact index|P10','LightON index|P01',
-                'LightON index|P10','Border|P01','Border|P10']
+                'InLight','InLight_HeadX|P01','InLight_HeadX|P10','First light contact index_of_the_whole_data|P01','First light contact index_of_the_whole_data|P10',
+                'LightON index|P01','First light contact index in P01','First light contact index in P10','LightON index|P10','Border|P01','Border|P10']
 
     results = pd.DataFrame(temp,columns=colOrder)
     return results, numOfTdmsFiles
@@ -398,22 +433,75 @@ def ReadExperimentData(directory):
 # In[3]:
 
 
-directory = "C:/Users/tumkayat/Desktop/CodeRep/WALiSAR/BehaviroalDataAnalyses/20170417_SmallerData"
+directory = "C:/Users/tumkayat/Desktop/OrcoData/20170705/Orco-Gal4-rut2080-UAS-CsChrimson/"
 results, numOfUploadedTdmsFiles = ReadExperimentData(directory)
 numOfUploadedTdmsFiles
 
 
-# In[ ]:
-
-
-results
-
-
 # ## Analyze the df
+
+# ### Visualize single fly tracjectory
+
+# In[16]:
+
+
+## Plot a single fly's trajectory as well as first light contacts.
+def VisualizeSingleFlyTrajectory(df,flyiLoc):
+    singleFlyData = df.iloc[flyiLoc,:]
+
+    ## Get the data for the selected fly
+    genotype = singleFlyData['Genotype']
+    lightON_P01,lightOFF_P01 = singleFlyData['LightON index|P01'][0],singleFlyData['LightON index|P01'][1]
+    lightON_P10,lightOFF_P10 = singleFlyData['LightON index|P10'][0],singleFlyData['LightON index|P10'][1]
+    headXData = singleFlyData['HeadX(pix)']
+
+    ## If no contact with light, assign 0
+    firstLightContact_P01 = int(singleFlyData['First light contact index_of_the_whole_data|P01']) if math.isnan(singleFlyData['First light contact index_of_the_whole_data|P01']) == False else 0
+    firstLightContact_P10 = int(singleFlyData['First light contact index_of_the_whole_data|P10']) if math.isnan(singleFlyData['First light contact index_of_the_whole_data|P10']) == False else 0
+    border_P01 = singleFlyData['Border|P01']
+    border_P10 = singleFlyData['Border|P10']
+
+    ## Open a new figure
+    fig = plt.figure()
+    ax1 = plt.subplot(111)
+
+    ax1.plot(range(len(headXData)), headXData, color='black')
+
+    ## Normalize borders to a range between 0-1 for the axvspan function
+    normalized_border_P01 = border_P01/145.0
+    normalized_border_P10 = border_P10/145.0
+
+    ax1.axvspan(lightON_P01, lightOFF_P01, ymin = normalized_border_P01, ymax = 1, color='red', alpha=0.3)
+    ax1.axvspan(lightON_P10, lightOFF_P10, ymin = 0, ymax = normalized_border_P10, color='red', alpha=0.3)
+    if firstLightContact_P01 != 0:
+        ax1.annotate('first' +'\n'+ 'contact', xy=(firstLightContact_P01, headXData[firstLightContact_P01]), 
+                 xytext=(firstLightContact_P01,headXData[firstLightContact_P01]), arrowprops=dict(facecolor='blue', shrink=0.05))
+
+    if firstLightContact_P10 != 0:
+        ax1.annotate('first' +'\n'+ 'contact', xy=(firstLightContact_P10, headXData[firstLightContact_P10]), 
+                 xytext=(firstLightContact_P10,headXData[firstLightContact_P10]), arrowprops=dict(facecolor='blue', shrink=0.05))
+
+    ax1.set_ylim(0,146)
+    ax1.set_ylabel('HeadX (pix)')
+    ax1.set_xlabel('Time frames')
+    sns.set(style="ticks", palette="bright", color_codes=True)
+    sns.despine()
+    return fig
+
+
+# In[19]:
+
+
+#for i in range(149):
+#     print i
+VisualizeSingleFlyTrajectory(results, flyiLoc=600)
+# plt.savefig('ContactedLight_bothHalves.pdf',dpi=1000,bbox_inches='tight')
+plt.show()
+
 
 # ### Preference index after light contact
 
-# In[ ]:
+# In[20]:
 
 
 def PreferenceIndexAfterLightContact(df):
@@ -426,18 +514,15 @@ def PreferenceIndexAfterLightContact(df):
     for fly in range(0,numberOfFlies):
         
         ## get the first light contact index for the fly
-        firstLightContactIndex_P01 = df['First light contact index|P01'][fly]
-        firstLightContactIndex_P10 = df['First light contact index|P10'][fly]
+        firstLightContactIndex_P01 = df['First light contact index in P01'][fly]
+        firstLightContactIndex_P10 = df['First light contact index in P10'][fly]
         
         ## if the light contact index is NOT nan, calculate the PI and attach it to the list
         ## otherwise attach a np.nan value
         if not np.isnan(firstLightContactIndex_P01):
-            ## get the light OFF index, so that can select InLight data from the first contact until light is OFF
-            lightOFFindex_P01 = df['LightON index|P01'][fly][1]
             
             ## select the data after fly was exposed to the light
-            InLightDatainTheRange_P01 = df['InLight'][fly][int(firstLightContactIndex_P01):int(lightOFFindex_P01)]
-            
+            InLightDatainTheRange_P01 = df['InLight_HeadX|P01'][fly][int(firstLightContactIndex_P01):]
             ## calculate PI score
             numOfDataPoints_P01 = len(InLightDatainTheRange_P01)
             numOfInLights_P01 = sum(InLightDatainTheRange_P01)
@@ -452,11 +537,10 @@ def PreferenceIndexAfterLightContact(df):
         else:
             None
         
-        ## same as the first half of the exp: P01
+        ## same as the first half of the exp: P10
         if not np.isnan(firstLightContactIndex_P10):
-            lightOFFindex_P10 = df['LightON index|P10'][fly][1]
-            InLightDatainTheRange_P10 = df['InLight'][fly][int(firstLightContactIndex_P10):int(lightOFFindex_P10)]
             
+            InLightDatainTheRange_P10 = df['InLight_HeadX|P10'][fly][int(firstLightContactIndex_P10):]
             numOfDataPoints_P10 = len(InLightDatainTheRange_P10)
             numOfInLights_P10 = sum(InLightDatainTheRange_P10)
             numOfInDarks_P10 = numOfDataPoints_P10 - numOfInLights_P10
@@ -491,7 +575,7 @@ def MeanPreferenceIndexNoNANs(df):
     return droppedNans
 
 
-# In[ ]:
+# In[21]:
 
 
 ## results is the original df that contains all the data, as well as individual preference index and the mean preference index 
@@ -503,7 +587,7 @@ results, PreferenceIndexDFDroppedNans = PreferenceIndexAfterLightContact(results
 
 # ### Plotting the Preference Index
 
-# In[ ]:
+# In[22]:
 
 
 ## Prepare the dfs for Contrast plotting
@@ -524,34 +608,37 @@ PreferenceIndexDFDroppedNans = PreferenceIndexDFDroppedNans.assign(Status_Sex_Sa
                              '_' + PreferenceIndexDFDroppedNans['Light Intensity(uW/mm2)'] + '_' + PreferenceIndexDFDroppedNans['Wind status'], index = PreferenceIndexDFDroppedNans.index))
 
 
-# In[ ]:
+# In[23]:
+
+
+myPal = {results['Genotype'].unique()[0] : 'lightgreen',
+         results['Genotype'].unique()[1] : 'cyan',
+         results['Genotype'].unique()[2]:  'red'}
+
+
+# In[26]:
 
 
 results['Status_Sex_Satiety_LightType_Intensity_Wind'].unique()
 
 
-# In[ ]:
+# In[29]:
 
 
-fig,b = bs.contrastplot(PreferenceIndexDFDroppedNans, x = 'Status_Sex_Satiety_LightType_Intensity_Wind', y = 'PreferenceIndex_Mean_noNan', color_col= 'Genotype',                      
-                      idx = (('Parent_Female_Fed_Constant_14uW_Air', 'Offspring_Female_Fed_Constant_14uW_Air'),
-                             ('Parent_Female_Fed_Constant_42uW_Air', 'Offspring_Female_Fed_Constant_42uW_Air'),
-                             ('Parent_Female_Fed_Constant_70uW_Air', 'Offspring_Female_Fed_Constant_70uW_Air')),
+fig,b = bs.contrastplot(results, x = 'Status_Sex_Satiety_LightType_Intensity_Wind', y = 'PreferenceIndex_Mean',
+                        color_col= 'Genotype', custom_palette = myPal,                      
+                      idx = (('Parent_male_Starved_Constant_14uW_NoAir', 'Offspring_male_Starved_Constant_14uW_NoAir'),
+                             ('Parent_male_Starved_Constant_42uW_NoAir', 'Offspring_male_Starved_Constant_42uW_NoAir'),
+                             ('Parent_male_Starved_Constant_70uW_NoAir', 'Offspring_male_Starved_Constant_70uW_NoAir') )
                                         )
 
-plt.savefig('PreferenceIndex_MeanNoNAN_Female_Fed_Constant_Air.pdf',dpi=1000,bbox_inches='tight')
+plt.savefig('PreferenceIndex_mean_Male_Starved_Constant_NoAir.pdf',dpi=1000,bbox_inches='tight')
 b
 
 
 # ### Preference index in the choice zone
 
 # In[ ]:
-
-
-results
-
-
-# In[4]:
 
 
 ## Function 1: Detect choice zone entrance indices, store them in the df
@@ -707,16 +794,11 @@ def DetectEntraceandExitIndicesToTheChoiceZone(df, choiceZoneWidth_mm = 10):
     return df
 
 
-# In[5]:
-
-
-dff = DetectEntraceandExitIndicesToTheChoiceZone(results)
-
-
 # In[ ]:
 
 
-dff.groupby('Genotype').get_group('Orco-Gal4-UAS-CsChrimson')
+## Detect entrance and exits of flies
+dff = DetectEntraceandExitIndicesToTheChoiceZone(results)
 
 
 # In[ ]:
@@ -746,7 +828,7 @@ headX_P01[668]
 df
 
 
-# In[6]:
+# In[ ]:
 
 
 def VisualizeGroupsOfData(group,data,counter,numOfGroups,axs,singleFly,durationAfterEntrance_frames,ylim,mean,CI):
@@ -811,7 +893,7 @@ def VisualizeGroupsOfData(group,data,counter,numOfGroups,axs,singleFly,durationA
             axs[counter+3*numOfGroups].axhspan(0,meanBorder_P10,color='red',alpha = 0.3)
             axs[counter+3*numOfGroups].set_ylim(ylim[0],ylim[1])
             
-        elif mean == True:
+        #elif mean == True:
             
             
         
@@ -920,7 +1002,7 @@ def VisualizeTheChoiceZoneTrajectories(df, singleFly = None, groupBy = None, gro
                     axs = VisualizeGroupsOfData(group,data,counter,numOfGroups,axs,singleFly,durationAfterEntrance_frames,ylim)
                     counter += 1
         
-        elif mean == True:
+        #elif mean == True:
             
             
     
@@ -942,7 +1024,7 @@ def VisualizeTheChoiceZoneTrajectories(df, singleFly = None, groupBy = None, gro
     return None
 
 
-# In[7]:
+# In[ ]:
 
 
 VisualizeTheChoiceZoneTrajectories(dff, singleFly = [140,150], groupBy = 'Genotype', groupsToPlot=None,
